@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+
+.body-bg{
+    background-color: #000921
+}
+
+.search-bg {
+    background-color: hsl(228, 45%, 44%);
+}
+
+.font-dmsans {
+    font-family: 'DM Sans', sans-serif;
+}
+
+.font-bri {
+    font-family: 'Bricolage Grotesque', sans-serif;
+}
+
+.yellow{
+    color: yellow;
+}
