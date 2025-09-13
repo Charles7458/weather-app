@@ -53,7 +53,7 @@ function App() {
         <label className=''>
           <input value={search} onChange={e=>setSearch(e.target.value)} 
             className='bg-gray-500/30 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-10 md:m-0 me-10' placeholder='Search for a place...'/>
-          <img src={searchIcon} className='relative bottom-8.5 left-6'/> 
+          <img src={searchIcon} className='relative bottom-9 left-6'/> 
         </label>
         <button className='bg-indigo-600 rounded-xl px-7 py-4 md:mb-5 mb-10 md:w-fit w-full'>Search</button>
       </div>
