@@ -1,8 +1,28 @@
 @import "tailwindcss";
 
+html,body
+{
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+    overflow-x: hidden; 
+}
 
-.body-bg{
-    background-color: #000921
+:root {
+    --color-scheme: light dark;
+    --light-bg: rgb(0, 140, 255);
+    --dark-bg: #000921;
+}
+
+[data-theme="light"] body{
+    background-color: var(--light-bg);
+    color: black;
+}
+
+[data-theme="dark"] body{
+    background-color: var(--dark-bg);
+    color: white;
 }
 
 .search-bg {
