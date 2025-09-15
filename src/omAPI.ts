@@ -1,0 +1,174 @@
+import axios, { type AxiosPromise, type AxiosResponse } from 'axios';
+
+export type location = {
+    id: number;
+    name: string;
+    latitude: number;
+    longitude: number;
+    elevation: number;
+    feature_code: string;
+    country_code: string;
+    admin1_id: number;
+    admin2_id: number;
+    admin3_id: number;
+    admin4_id: number;
+    timezone: string;
+    population: number;
+    post_codes: Array<string>;
+    country_id: number;
+    country: string;
+    admin1: string;
+    admin2: string;
+    admin3: string;
+    admin4: string;
+}
+
+export type weather = {
+    latitude: number,
+    longitude: number,
+    generationtime_ms: number,
+    utc_offset_seconds: number,
+    timezone: string,
+    timezone_abbreviation: string,
+    elevation: number,
+    current_units: {
+        time: string,
+        interval: string,
+        temperature_2m: string,
+        relative_humidity_2m: string,
+        apparent_temperature: string,
+        precipitation: string,
+        weather_code: string,
+    },
+    current: {
+        time: string,
+        interval: number,
+        temperature_2m: number,
+        relative_humidity_2m: number,
+        apparent_temperature: number,
+        precipitation: number,
+        weather_code: number,
+    },
+    hourly_units: {
+        time: string,
+        temperature_2m: string,
+        weather_code: string,
+        apparent_temperature: string,
+        precipitation_probability: string,
+    },
+
+    hourly: {
+        time: Array<string>,
+        temperature_2m: Array<number>,
+        weather_code: Array<number>,
+        apparent_temperature: Array<number>,
+        precipitation_probability: Array<number>,
+    },
+    daily_units: {
+        time: string,
+        temperature_2m_max: string,
+        temperature_2m_min: string,
+        precipitation_probability_max: string,
+    },
+    daily: {
+      time: Array<string>,
+      temperature_2m_max: Array<number>,
+      temperature_2m_min: Array<number>,
+      precipitation_probability_max: Array<number>,
+    }
+}
+
+export const defWeather: weather = {
+    latitude: 0,
+    longitude: 0,
+    generationtime_ms: 0,
+    utc_offset_seconds: 0,
+    timezone: "",
+    timezone_abbreviation: "",
+    elevation: 0,
+    current_units: {
+        time: "",
+        interval: "",
+        temperature_2m: "",
+        relative_humidity_2m: "",
+        apparent_temperature: "",
+        precipitation: "",
+        weather_code: "",
+    },
+    current: {
+        time: "",
+        interval: 0,
+        temperature_2m: 0,
+        relative_humidity_2m: 0,
+        apparent_temperature: 0,
+        precipitation: 0,
+        weather_code: 0,
+    },
+    hourly_units: {
+    time: "",
+    temperature_2m: "",
+    weather_code: "",
+    apparent_temperature: "",
+    precipitation_probability: "",
+  },
+  hourly: {
+    time: [""],
+    temperature_2m: [0],
+    weather_code: [0],
+    apparent_temperature: [0],
+    precipitation_probability: [0],
+  },
+  daily_units: {
+    time: "",
+    temperature_2m_max: "",
+    temperature_2m_min: "",
+    precipitation_probability_max: "",
+  },
+    daily: {
+      time:[""],
+      temperature_2m_min: [0],
+      temperature_2m_max: [0],
+      precipitation_probability_max: [0],
+    }
+}
+
+
+let units = {
+  temperature: "celsius",
+  wind_speed: "km/h",
+  precipitation: "mm"
+}
+
+export function setUnits(parameter:string, unit:string){
+  units = {...units,[parameter]:unit}
+  console.log(units)
+}
+
+/*
+ temperature:   farenheit -> &temperature_unit=farenheit , default = celsius
+ Wind Speed:    m/s -> &wind_speed_unit=ms , mph -> &wind_speed_unit=mph , knots = &wind_speed_unit=kn , default = km/h
+ Preciptiation: inch -> precipitation_unit=inch (in) , default = millimeter (mm)
+*/
+
+// celsius = &#8451; , farenheit = &#8457;
+//api for getting current weather along with 7 days ahead and hourly weather
+
+export async function getWeather(lat: number|undefined, long: number|undefined): Promise<weather | null> {
+  if(lat==undefined || long == undefined){return null;}
+  const temp_unit = units.temperature=="celsius" ? "": `&temperature_unit=${units.temperature}`
+  const wind_speed = units.wind_speed=="km/h" ? "": `&wind_speed_unit=${units.wind_speed}`
+  const precipitation = units.precipitation=="millimeter" ? "": `&precipitation_unit=${units.precipitation}`
+  const result: AxiosResponse = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&daily=weather_code&`+
+    "hourly=temperature_2m,weather_code&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=auto"
+    +temp_unit+wind_speed+precipitation);
+  const weather:weather = result.data
+  return weather;
+}
+
+export async function searchLocation(name: string): Promise<weather | null> {
+      const location: location = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=1&language=en&format=json`);
+      const lat = location.latitude;
+      const long = location.longitude;
+      const weather = await getWeather(lat, long);
+      return weather;
+}     

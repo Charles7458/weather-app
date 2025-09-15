@@ -11,13 +11,12 @@ html,body
 
 :root {
     --color-scheme: light dark;
-    --light-bg: rgb(0, 140, 255);
-    --dark-bg: #000921;
+    --light-bg: rgb(95, 169, 230);
+    --dark-bg: #000c2e;
 }
 
 [data-theme="light"] body{
     background-color: var(--light-bg);
-    color: black;
 }
 
 [data-theme="dark"] body{
@@ -39,4 +38,46 @@ html,body
 
 .yellow{
     color: yellow;
+}
+
+.today-bg {
+    background-image: url(assets/images/bg-today-large.svg);
+    height: 285px;
+    width: 800px;
+}
+
+.my-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+}
+
+@keyframes rotation {
+    0%{
+        rotate: 0deg;
+    }
+    50%{
+        rotate: 180deg;
+    }
+    100%{
+        rotate: 360deg;
+    }
+}
+
+@media (max-width:427px){
+    .today-bg {
+        background-image: url(assets/images/bg-today-small.svg);
+        height: 320px;
+        width: 100%;
+        background-repeat: no-repeat;
+        background-size: contain;
+        justify-self: center;
+        align-self: center;
+    }
+
+    .my-grid {
+        grid-template-columns: 1fr;
+        width: 90vw;
+        justify-content: center;
+        align-items: center;
+    }
 }
