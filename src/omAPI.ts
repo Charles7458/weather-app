@@ -1,4 +1,4 @@
-import axios, { type AxiosPromise, type AxiosResponse } from 'axios';
+import axios, {type AxiosResponse } from 'axios';
 
 export type location = {
     id: number;
