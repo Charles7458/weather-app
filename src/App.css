@@ -70,8 +70,6 @@ html,body
         width: 100%;
         background-repeat: no-repeat;
         background-size: contain;
-        justify-self: center;
-        align-self: center;
     }
 
     .my-grid {

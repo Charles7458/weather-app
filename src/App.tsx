@@ -39,6 +39,7 @@ function App() {
     const day = days[date.getDay()];
     const dateString = `${day}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
     const hour = date.getHours();
+    const [forecastDay, setForecastDay] = useState(day || "")
 
     
     async function getAllWeather() { // function that gets the forecast
@@ -151,7 +152,7 @@ function App() {
 
           <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
 
-          <button className='md:h-10 h-8 bg-gray-600/30 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-gray-600/50'> {/*Units button*/}
+          <button className='md:h-10 h-8 bg-gray-600/40 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-gray-600/50'> {/*Units button*/}
             <div className='flex gap-x-3 px-3'>
               <img src={units} />
               Units
@@ -169,29 +170,54 @@ function App() {
         <div className='md:flex items-center justify-center md:mb-10'>
           <label className=''>
             <input type='search' value={search} onChange={e=>setSearch(e.target.value)} aria-label='search location'
-              className='bg-gray-500/30 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-10 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
+              className='bg-gray-500/30 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
             <img src={searchIcon} className='relative bottom-9 left-6' alt='search icon'/> 
           </label>
           <button className='bg-indigo-600/90 rounded-xl font-semibold px-7 py-4 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-indigo-700'>Search</button>
         </div>
-        <div className='my-grid gap-10 mx-auto'>
+        <div className='my-grid gap-x-10 mx-auto'>
 
-          <div className='flex today-bg items-center px-5 justify-self-end justify-between'> {/* today bg div*/}
+          <div className='md:grid md:grid-cols-2 md:align-middle today-bg md:items-center ps-10 py-10 justify-self-end justify-between'> {/* today bg div*/}
 
-              <div>{/*city div*/}
+              <div className='md:block hidden'>{/*city div (big screens)*/}
                 <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
                 <p className='text-gray-300/60 text-xl'>{dateString}</p>
               </div>
 
-              <div className='flex align-middle items-center justify-end'>{/* temp weather div*/}
+              <div className='md:flex hidden align-middle items-center justify-self-end pe-5'>{/* temp weather div (big screens) */}
                 <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
-                <p className='text-8xl font-dmsans ms-7'>{weather.current.temperature_2m}&deg;</p>
+                <p className='text-8xl font-dmsans italic ms-7'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
+              </div>
+
+              <div className='md:hidden text-center mt-10 mb-6'>{/*city div (small screens)*/}
+                <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
+                <p className='text-gray-300/60 text-lg'>{dateString}</p>
+              </div>
+
+              <div className='md:hidden flex align-middle justify-center items-center'>{/* temp weather div (big screens) */}
+                <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
+                <p className='text-8xl font-dmsans italic ms-5'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
+              </div>
+
+              <div className='grid grid-cols-4'> {/*feels like, precipitation,etc. divs*/}
+
               </div>
 
           </div>
 
-          <div className='h-96 md:w-[90%] w-full bg-gray-700 rounded-xl'> {/* hourly weather div*/}
+          <div className='h-96 md:w-[90%] w-full bg-gray-500/30 p-5 rounded-xl'> {/* hourly weather div*/}
+            <span className='flex justify-between items-center mb-5'>
+              <p className='text-lg font-semibold'>Hourly forecast</p>
+              <button className='md:h-10 h-8 bg-gray-500/15 rounded-lg py-1 hover:cursor-pointer hover:bg-gray-500/25'> {/*Units button*/}
+              <div className='flex gap-x-3 ps-4 pe-3'>
+                {forecastDay}
+                <img src={dropdown}/>
+              </div>
+            </button>
+            </span>
+            <div className='h-16 w-full bg-gray-500/15 rounded-xl'>
 
+            </div>
           </div>
 
         </div>
@@ -201,42 +227,105 @@ function App() {
 
     function WCodetoImg(code:number){ // function to translate weather code
 
-        if([0,1].includes(code))
-          return sunny;
-        else if(code==2)
-          return partlyCloudy;
-        else if(code==3)
-          return overcast;
-        else if([45,48].includes(code))
-          return fog;
-        else if([51,53,55,56,57].includes(code))
-          return drizzle;
-        else if([61,63,65,66,67, 80,81,82].includes(code))
-          return rain;
-        else if([71, 73, 75, 77, 85, 86].includes(code))
-          return snow;
-        else if([95,96,99].includes(code))
-          return storm;
+      const CodeMap: { [key: number]: string } = {
+          0 : sunny,
+          1 : sunny,
+          2 : partlyCloudy,
+          3 : overcast,
+          45 : fog,
+          48 : fog,
+          51 : drizzle,
+          53 : drizzle,
+          55 : drizzle,
+          56 : drizzle,
+          57 : drizzle,
+          61 : rain,   
+          63 : rain,     
+          65 : rain,  
+          66 : rain,
+          67 : rain,
+          71 : snow,   
+          73 : snow,     
+          75 : snow,  
+          77 : snow,   
+          80 : rain,         
+          81 : rain,
+          82 : rain,          
+          85 : snow,
+          86 : snow,          
+          95 :storm,
+          96 :storm,          
+          99 :storm,       
+        }
+
+        return CodeMap[code]
+        // if([0,1].includes(code))
+        //   return sunny;
+        // else if(code==2)
+        //   return partlyCloudy;
+        // else if(code==3)
+        //   return overcast;
+        // else if([45,48].includes(code))
+        //   return fog;
+        // else if([51,53,55,56,57].includes(code))
+        //   return drizzle;
+        // else if([61,63,65,66,67, 80,81,82].includes(code))
+        //   return rain;
+        // else if([71, 73, 75, 77, 85, 86].includes(code))
+        //   return snow;
+        // else if([95,96,99].includes(code))
+        //   return storm;
       }
 
       function WCodetoText(code:number){ // function to translate weather code
 
-        if([0,1].includes(code))
-          return "sunny";
-        else if(code==2)
-          return "partly cloudy";
-        else if(code==3)
-          return "overcast";
-        else if([45,48].includes(code))
-          return "fog";
-        else if([51,53,55,56,57].includes(code))
-          return "drizzle";
-        else if([61,63,65,66,67, 80,81,82].includes(code))
-          return "rain";
-        else if([71, 73, 75, 77, 85, 86].includes(code))
-          return "snow";
-        else if([95,96,99].includes(code))
-          return "storm";
+        const CodeMap: { [key: number]: string } = {
+          0 : "sunny",
+          1 : "mainly clear",
+          2 : "partly cloudy",
+          3 : "overcast",
+          45 : "fog",
+          48 : "depositing rime fog",
+          51 : "light drizzle",
+          53 : "moderate drizzle",          
+          55 : "dense drizzle",
+          56 : "light freezing drizzle",
+          57 : "dense freezing drizzle",
+          61 : "slight rain",
+          63 : "moderate rain",
+          65 : "heavy rain",
+          66 : "light freezing rain",
+          67 : "heavy freezing rain",
+          71 : "slight snow",
+          73 : "moderate snow",
+          75 : "heavy snow",
+          77 : "snow grains",
+          80 : "slight rain showers",
+          81 : "moderate rain showers",
+          82 : "violent rain showers",
+          85 : "slight snow showers",
+          86 : "heavy snow showers",
+          95 : "thunderstorm",
+          96 : "thunderstorm w/ slight hail",
+          99 : "thunderstorm w/ heavy hail"
+        }
+        // if([0,1].includes(code))
+        //   return "sunny";
+        // else if(code==2)
+        //   return "partly cloudy";
+        // else if(code==3)
+        //   return "overcast";
+        // else if([45,48].includes(code))
+        //   return "fog";
+        // else if([51,53,55,56,57].includes(code))
+        //   return "drizzle";
+        // else if([61,63,65,66,67, 80,81,82].includes(code))
+        //   return "rain";
+        // else if([71, 73, 75, 77, 85, 86].includes(code))
+        //   return "snow";
+        // else if([95,96,99].includes(code))
+        //   return "storm";
+        return CodeMap[code];
       }
   }
 }
