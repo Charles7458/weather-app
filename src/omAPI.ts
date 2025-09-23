@@ -132,6 +132,9 @@ export const defWeather: weather = {
     }
 }
 
+type locationList = {
+    "results": Array<location>
+}
 
 let units = {
   temperature: "celsius",
@@ -165,10 +168,9 @@ export async function getWeather(lat: number|undefined, long: number|undefined):
   return weather;
 }
 
-export async function searchLocation(name: string): Promise<weather | null> {
-      const location: location = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=1&language=en&format=json`);
-      const lat = location.latitude;
-      const long = location.longitude;
-      const weather = await getWeather(lat, long);
-      return weather;
+export async function searchLocation(name: string): Promise<Array<location> | null> {
+      const location = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=1&language=en&format=json`);
+      const locationList: locationList = location.data;
+      return locationList.results;
 }     
+

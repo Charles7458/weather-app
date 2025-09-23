@@ -3,7 +3,7 @@ import axios from 'axios';
 import { defWeather, getWeather} from './omAPI';//setUnits, searchLocation
 // import type {weather}  from './omAPI';
 import './App.css';
-// import { useGeolocated } from 'react-geolocated'
+import { UnitsDropdown } from './dropdown';
 
 import logo from './assets/images/logo.svg';
 import errorIcon from './assets/images/icon-error.svg';
@@ -24,6 +24,31 @@ import storm from './assets/images/icon-storm.webp';
 import sunny from './assets/images/icon-sunny.webp';
 
 
+function HourlyDiv(hr:{img:string, hour:string, temperature:number}){
+  let hour = new Date(hr.hour).getHours();
+  const AMPM = hour>12 ? "PM" : "AM";
+  const Hour12 = hour%12;
+  if(hour==0){
+    hour = 12;
+  }
+
+  return(
+    <div className='flex h-16 w-full bg-gray-500/15 rounded-xl px-5 mb-5 justify-between items-center'>
+      <span className='flex items-center'>
+        <img src={hr.img} className='h-16 py-1' />
+        <p className='ms-3 text-xl'>{Hour12} {AMPM}</p>
+      </span>
+      <p className='text-lg'>{hr.temperature}&deg;</p>
+     </div>
+  )
+}
+
+type hourlyData = {
+  time: string,
+  temp:number,
+  w_code:number
+}
+
 function App() {
   
     const [isError, setIsError] = useState(false);
@@ -39,12 +64,17 @@ function App() {
     const day = days[date.getDay()];
     const dateString = `${day}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
     const hour = date.getHours();
-    const [forecastDay, setForecastDay] = useState(day || "")
-
+    const [forecastDay, setForecastDay] = useState(date.getDay() || "-")
+    const [hourly, setHourly] = useState<Array<hourlyData>>([{time:"",temp:0,w_code:0}])
     
     async function getAllWeather() { // function that gets the forecast
         const currWeather = await getWeather(coords.latitude, coords.longitude);
+        if(currWeather===null){
+          setIsError(true);
+          return;
+        }
         setWeather(currWeather || defWeather);
+        // getHourly(0)
         console.log(currWeather)
         console.log(coords.latitude, coords.longitude)
     }      
@@ -54,6 +84,31 @@ function App() {
         const location: any = res.data;
         if(res.status!=200){setIsError(true)}
         setCityString(`${location.city}, ${location.countryName}`)
+    }
+
+    function getHourly(theDay:number) {
+      let newHourlyData : Array<hourlyData>= []
+      if(theDay===0){
+        for(let i=hour-1;i<24;i++){
+          const time = weather.hourly.time[i];
+          const w_code = weather.hourly.weather_code[i];
+          const temp = weather.hourly.temperature_2m[i];
+          newHourlyData.push({time: time, w_code: w_code, temp: temp})
+        }
+      }
+      else {
+        const start = 24*theDay;
+        const end = start + 24;
+        for(let i = start;i<end+24;i++) {
+          const time = weather.hourly.time[i];
+          const w_code = weather.hourly.weather_code[i];
+          const temp = weather.hourly.temperature_2m[i];
+          newHourlyData.push({time: time, w_code: w_code, temp: temp})
+        }
+      }
+      console.log(newHourlyData)
+      setHourly(newHourlyData);
+
     }
 
     useEffect(()=>{ //changing theme according to day or night at the initial load of the page
@@ -87,11 +142,17 @@ function App() {
     useEffect(()=>{ //getting weather and city
       if(!isLocPending){
             getAllWeather();
-            getCity()
-          console.log(cityString)
+            getCity();
+            console.log(weather)
       }
       setIsLoading(false)
     },[isLocPending,coords])
+
+    useEffect(()=>{
+      if(!isLoading){
+        getHourly(0);
+      }
+    },[hour,weather])
 
     // function changeUnits(parameter: string, unit: string){
     //   setUnits(parameter, unit);
@@ -101,7 +162,7 @@ function App() {
   // console.log(document.documentElement.getAttribute("data-theme"))
   if(isLoading){
     return(
-      <div>
+      <div> 
 
       </div>
     )
@@ -145,85 +206,94 @@ function App() {
         </div>
       )
     }
-    return (
-      <div className='min-h-[100vh] min-w-[100vw] text-white md:pt-10 md:p-5 pt-5 p-3'>
-
-        <div className="flex mx-2 md:mx-[5vw] justify-between">
-
-          <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
-
-          <button className='md:h-10 h-8 bg-gray-600/40 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-gray-600/50'> {/*Units button*/}
-            <div className='flex gap-x-3 px-3'>
-              <img src={units} />
-              Units
-              <img src={dropdown}/>
-            </div>
-          </button>
-
-        </div>
 
 
-        <p className='text-6xl  font-bri mx-[6vw] md:mx-0 my-16 text-center leading-18'>How's the sky looking today?</p>
-        {/* <h1>{coords!=undefined ? `latitude: ${coords?.latitude} longitude: ${coords?.longitude}`: "location is not available"}</h1> */}
+    else{
+      return (
+        <div className='min-h-[100vh] min-w-[100vw] text-white md:pt-10 md:p-5 pt-5 p-3'>
 
+          <div className="flex mx-2 md:mx-[5vw] justify-between">
 
-        <div className='md:flex items-center justify-center md:mb-10'>
-          <label className=''>
-            <input type='search' value={search} onChange={e=>setSearch(e.target.value)} aria-label='search location'
-              className='bg-gray-500/30 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
-            <img src={searchIcon} className='relative bottom-9 left-6' alt='search icon'/> 
-          </label>
-          <button className='bg-indigo-600/90 rounded-xl font-semibold px-7 py-4 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-indigo-700'>Search</button>
-        </div>
-        <div className='my-grid gap-x-10 mx-auto'>
+            <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
 
-          <div className='md:grid md:grid-cols-2 md:align-middle today-bg md:items-center ps-10 py-10 justify-self-end justify-between'> {/* today bg div*/}
-
-              <div className='md:block hidden'>{/*city div (big screens)*/}
-                <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
-                <p className='text-gray-300/60 text-xl'>{dateString}</p>
-              </div>
-
-              <div className='md:flex hidden align-middle items-center justify-self-end pe-5'>{/* temp weather div (big screens) */}
-                <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
-                <p className='text-8xl font-dmsans italic ms-7'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
-              </div>
-
-              <div className='md:hidden text-center mt-10 mb-6'>{/*city div (small screens)*/}
-                <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
-                <p className='text-gray-300/60 text-lg'>{dateString}</p>
-              </div>
-
-              <div className='md:hidden flex align-middle justify-center items-center'>{/* temp weather div (big screens) */}
-                <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
-                <p className='text-8xl font-dmsans italic ms-5'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
-              </div>
-
-              <div className='grid grid-cols-4'> {/*feels like, precipitation,etc. divs*/}
-
-              </div>
-
-          </div>
-
-          <div className='h-96 md:w-[90%] w-full bg-gray-500/30 p-5 rounded-xl'> {/* hourly weather div*/}
-            <span className='flex justify-between items-center mb-5'>
-              <p className='text-lg font-semibold'>Hourly forecast</p>
-              <button className='md:h-10 h-8 bg-gray-500/15 rounded-lg py-1 hover:cursor-pointer hover:bg-gray-500/25'> {/*Units button*/}
-              <div className='flex gap-x-3 ps-4 pe-3'>
-                {forecastDay}
+            <button className='md:h-10 h-8 bg-gray-600/40 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-gray-600/50'> {/*Units button*/}
+              <div className='flex gap-x-3 px-3'>
+                <img src={units} />
+                Units
                 <img src={dropdown}/>
               </div>
             </button>
-            </span>
-            <div className='h-16 w-full bg-gray-500/15 rounded-xl'>
 
-            </div>
           </div>
 
-        </div>
-      </div>
-    )
 
+          <p className='text-6xl  font-bri mx-[6vw] md:mx-0 my-16 text-center leading-18'>How's the sky looking today?</p>
+          {/* <h1>{coords!=undefined ? `latitude: ${coords?.latitude} longitude: ${coords?.longitude}`: "location is not available"}</h1> */}
+
+
+          <div className='md:flex items-center justify-center md:mb-10'>
+            <label className=''>
+              <input type='search' value={search} onChange={e=>setSearch(e.target.value)} aria-label='search location'
+                className='bg-gray-500/30 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
+              <img src={searchIcon} className='relative bottom-9 left-6' alt='search icon'/> 
+            </label>
+            <button className='bg-indigo-600/90 rounded-xl font-semibold px-7 py-4 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-indigo-700'>Search</button>
+          </div>
+          <div className='my-grid gap-10 mx-auto'>
+
+            <div className='md:grid md:grid-cols-2 md:align-middle today-bg md:items-center md:ps-10 xl:py-10 justify-self-end justify-between'> {/* today bg div*/}
+
+                <div className='md:block hidden'>{/*city div (big screens)*/}
+                  <p className='xl:text-4xl lg:text-3xl md:text-4xl font-dmsans mb-3'>{cityString}</p>
+                  <p className='text-gray-300/60 text-xl'>{dateString}</p>
+                </div>
+
+                <div className='md:flex hidden align-middle items-center justify-self-start pe-10'>{/* temp weather div (big screens) */}
+                  <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
+                  <p className='xl:text-8xl lg:text-7xl md:text-8xl font-dmsans italic ms-7'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
+                </div>
+
+                <div className='md:hidden text-center mt-10 mb-6'>{/*city div (small screens)*/}
+                  <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
+                  <p className='text-gray-300/60 text-lg'>{dateString}</p>
+                </div>
+
+                <div className='md:hidden flex align-middle justify-center items-center'>{/* temp weather div (small screens) */}
+                  <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
+                  <p className='text-8xl font-dmsans italic ms-5'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
+                </div>
+
+                <div className='grid grid-cols-4'> {/*feels like, precipitation,etc. divs*/}
+
+                </div>
+
+            </div>
+
+            <div className='h-fit xl:h-[700px]  w-[80%] bg-gray-500/30 py-5 px-3 rounded-xl'> {/* hourly weather div*/}
+              <span className='flex justify-between items-center mb-5'>
+
+                <p className='text-xl font-semibold ms-5'>Hourly forecast</p>
+
+                <button className='md:h-10 h-8 bg-gray-500/15 rounded-lg py-1 me-5 hover:cursor-pointer hover:bg-gray-500/25'> {/*Units button*/}
+                  
+                  <div className='flex gap-x-3 ps-4 pe-3'>
+                    {typeof(forecastDay)=="number" ? days[forecastDay] : forecastDay}
+                    <img src={dropdown}/>
+                  </div>
+
+                </button>
+              </span>
+              {
+                hourly.map((ihour)=>{
+                  return <HourlyDiv img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                })
+              }
+            </div>
+
+          </div>
+        </div>
+      )
+    }
 
     function WCodetoImg(code:number){ // function to translate weather code
 
