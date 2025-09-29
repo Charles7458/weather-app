@@ -136,17 +136,51 @@ type locationList = {
     "results": Array<location>
 }
 
+export type units = {
+  temperature: string;
+  wind_speed: string;
+  precipitation: string;
+}
+
 let units = {
   temperature: "celsius",
   wind_speed: "km/h",
   precipitation: "mm"
 }
 
+
+
 export function setUnits(parameter:string, unit:string){
   units = {...units,[parameter]:unit}
   console.log(units)
 }
 
+export function setToImperial(){
+  units = 
+  {
+    temperature: "farenheit",
+    wind_speed: "mph",
+    precipitation: "inch"
+  }
+  console.log(units)
+}
+
+export function setToMetric(){
+  units = 
+  {
+    temperature: "celsius",
+    wind_speed: "km/h",
+    precipitation: "mm"
+  }
+}
+
+export function checkIsImperial() {
+  return units.temperature=="farenheit" && units.wind_speed=="mph" && units.precipitation=="inch";
+}
+
+export function checkIsMetric() {
+  return units.temperature=="celsius" && units.wind_speed=="km/h" && units.precipitation=="mm";
+}
 /*
  temperature:   farenheit -> &temperature_unit=farenheit , default = celsius
  Wind Speed:    m/s -> &wind_speed_unit=ms , mph -> &wind_speed_unit=mph , knots = &wind_speed_unit=kn , default = km/h
@@ -169,7 +203,7 @@ export async function getWeather(lat: number|undefined, long: number|undefined):
 }
 
 export async function searchLocation(name: string): Promise<Array<location> | null> {
-      const location = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=1&language=en&format=json`);
+      const location = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=5&language=en&format=json`);
       const locationList: locationList = location.data;
       return locationList.results;
 }     

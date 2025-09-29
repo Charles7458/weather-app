@@ -1,9 +1,9 @@
 import { useEffect, useState} from 'react'
 import axios from 'axios';
-import { defWeather, getWeather} from './omAPI';//setUnits, searchLocation
+import { checkIsImperial, checkIsMetric, defWeather, getWeather, setToImperial, setToMetric, setUnits} from './omAPI';//setUnits, searchLocation
 // import type {weather}  from './omAPI';
 import './App.css';
-import { UnitsDropdown } from './dropdown';
+import { DaysDropdown, UnitsDropdown } from './dropdown';
 
 import logo from './assets/images/logo.svg';
 import errorIcon from './assets/images/icon-error.svg';
@@ -27,9 +27,9 @@ import sunny from './assets/images/icon-sunny.webp';
 function HourlyDiv(hr:{img:string, hour:string, temperature:number}){
   let hour = new Date(hr.hour).getHours();
   const AMPM = hour>12 ? "PM" : "AM";
-  const Hour12 = hour%12;
-  if(hour==0){
-    hour = 12;
+  let Hour12 = hour%12;
+  if(Hour12==0){
+    Hour12 = 12;
   }
 
   return(
@@ -64,8 +64,18 @@ function App() {
     const day = days[date.getDay()];
     const dateString = `${day}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
     const hour = date.getHours();
+
+    const [isImperial, setIsImperial] = useState(false);
+    const [isMetric, setIsMetric] = useState(false);
+
     const [forecastDay, setForecastDay] = useState(date.getDay() || "-")
+
     const [hourly, setHourly] = useState<Array<hourlyData>>([{time:"",temp:0,w_code:0}])
+
+    const [showUnitsDropdown, setShowUnitsDropdown] = useState(false);
+    const [showDaysDropdown, setShowDaysDropdown] = useState(false);
+
+    
     
     async function getAllWeather() { // function that gets the forecast
         const currWeather = await getWeather(coords.latitude, coords.longitude);
@@ -89,7 +99,7 @@ function App() {
     function getHourly(theDay:number) {
       let newHourlyData : Array<hourlyData>= []
       if(theDay===0){
-        for(let i=hour-1;i<24;i++){
+        for(let i=hour-1;i<hour+7;i++){
           const time = weather.hourly.time[i];
           const w_code = weather.hourly.weather_code[i];
           const temp = weather.hourly.temperature_2m[i];
@@ -110,6 +120,27 @@ function App() {
       setHourly(newHourlyData);
 
     }
+
+    function handleSetImperial(){
+      setIsImperial(true);
+      setIsMetric(false)
+      setToImperial();
+    }
+
+    function handleSetMetric(){
+      setIsImperial(false);
+      setIsMetric(true);
+      setToMetric();
+    }
+
+    function handleUnitChange(parameter:string, unit:string){
+      setIsImperial(checkIsImperial());
+      setIsMetric(checkIsMetric());
+      setUnits(parameter,unit);
+      
+    }
+
+    
 
     useEffect(()=>{ //changing theme according to day or night at the initial load of the page
       var doc = document.documentElement;
@@ -216,13 +247,19 @@ function App() {
 
             <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
 
-            <button className='md:h-10 h-8 bg-gray-600/40 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-gray-600/50'> {/*Units button*/}
-              <div className='flex gap-x-3 px-3'>
-                <img src={units} />
-                Units
-                <img src={dropdown}/>
-              </div>
-            </button>
+            <div className='relative'>
+              <button className='md:h-10 h-8 bg-slate-800 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-gray-600/50'
+                onClick={()=>setShowUnitsDropdown(!showUnitsDropdown)}> {/*Units button*/}
+                <div className='flex gap-x-3 px-3'>
+                  <img src={units} />
+                  Units
+                  <img src={dropdown} className={showUnitsDropdown? "rotate-180":""}/>
+                </div>
+              </button>
+
+              <UnitsDropdown show={showUnitsDropdown} isImperial={isImperial} isMetric={isMetric} setToImperial={handleSetImperial} setToMetric={handleSetMetric} changeUnits={handleUnitChange}/>
+            </div>
+            
 
           </div>
 
@@ -239,13 +276,13 @@ function App() {
             </label>
             <button className='bg-indigo-600/90 rounded-xl font-semibold px-7 py-4 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-indigo-700'>Search</button>
           </div>
-          <div className='my-grid gap-10 mx-auto'>
+          <div className='my-grid gap-10 mx-auto lg:gap-3 xl:gap-10'>
 
-            <div className='md:grid md:grid-cols-2 md:align-middle today-bg md:items-center md:ps-10 xl:py-10 justify-self-end justify-between'> {/* today bg div*/}
+            <div className='md:grid md:grid-cols-2 md:align-middle today-bg md:items-center md:ps-10 lg:ps-5 xl:ps-10 xl:py-10 justify-self-end justify-between'> {/* today bg div*/}
 
                 <div className='md:block hidden'>{/*city div (big screens)*/}
-                  <p className='xl:text-4xl lg:text-3xl md:text-4xl font-dmsans mb-3'>{cityString}</p>
-                  <p className='text-gray-300/60 text-xl'>{dateString}</p>
+                  <p className='xl:text-4xl lg:text-3\2xl md:text-4xl font-dmsans mb-3'>{cityString}</p>
+                  <p className='text-gray-300/60 text-lg'>{dateString}</p>
                 </div>
 
                 <div className='md:flex hidden align-middle items-center justify-self-start pe-10'>{/* temp weather div (big screens) */}
@@ -269,19 +306,26 @@ function App() {
 
             </div>
 
-            <div className='h-fit xl:h-[700px]  w-[80%] bg-gray-500/30 py-5 px-3 rounded-xl'> {/* hourly weather div*/}
+            <div className='h-fit xl:w-[80%] w-full bg-gray-500/30 py-5 px-3 rounded-xl'> {/* hourly weather div*/}
               <span className='flex justify-between items-center mb-5'>
 
                 <p className='text-xl font-semibold ms-5'>Hourly forecast</p>
 
-                <button className='md:h-10 h-8 bg-gray-500/15 rounded-lg py-1 me-5 hover:cursor-pointer hover:bg-gray-500/25'> {/*Units button*/}
-                  
-                  <div className='flex gap-x-3 ps-4 pe-3'>
-                    {typeof(forecastDay)=="number" ? days[forecastDay] : forecastDay}
-                    <img src={dropdown}/>
-                  </div>
+                <div className='relative'>{/*day dropdown button*/}
 
-                </button>
+                  <button className='md:h-10 h-8 bg-gray-500/15 rounded-lg py-1 me-5 hover:cursor-pointer hover:bg-gray-500/25'
+                    onClick={()=>setShowDaysDropdown(!showDaysDropdown)}> 
+                    
+                    <div className='flex gap-x-3 ps-4 pe-3'>
+                      {typeof(forecastDay)=="number" ? days[forecastDay] : forecastDay}
+                      <img src={dropdown}/>
+                    </div>
+
+                  </button>
+
+                  <DaysDropdown show={showDaysDropdown}/>
+                </div>
+                
               </span>
               {
                 hourly.map((ihour)=>{
