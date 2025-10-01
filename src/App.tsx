@@ -47,7 +47,7 @@ function HourlyDiv(hr:{img:string, hour:string, temperature:number}) {
   }
 
   return(
-    <div className='flex h-16 w-full bg-Neutral-700 border border-Neutral-600 shadow-md rounded-xl px-5 mb-5 justify-between items-center'>
+    <div className='flex h-16 w-[97%] bg-Neutral-700 border border-Neutral-600 shadow-md rounded-xl px-5 mb-5 justify-between items-center me-3'>
       <span className='flex items-center'>
         <img src={hr.img} className='h-16 py-1' />
         <p className='ms-3 text-xl text-Neutral-200 font-bri'>{Hour12} {AMPM}</p>
@@ -65,6 +65,19 @@ function CurrentStats(fn:{name:string,data:string, unit:string}) {
       <p className='text-Neutral-200 2xs:text-4xl text-5xl font-dmsans'>{fn.data} 
         <span className='text-2xl ms-2'>{fn.unit}</span>
       </p>
+    </div>
+  )
+}
+
+function DailyStats(fn:{dayName:string,w_code:string,min_temp:number,max_temp:number}){
+  return(
+    <div className='bg-Neutral-700 border-2 border-Neutral-600 rounded-2xl px-2 py-3 shadow-2xl'>
+      <p className='text-Neutral-300 text-center'>{fn.dayName.substring(0,3)}</p>
+      <img src={fn.w_code} className='md:w-[130px] w-[80px] mx-auto'></img>
+      <div className='flex justify-between'>
+        <span className='text-Neutral-300'>{fn.max_temp}&deg;</span>
+        <span className='text-Neutral-300'>{fn.min_temp}&deg;</span>
+      </div>
     </div>
   )
 }
@@ -307,6 +320,7 @@ function App() {
 
 
     else{
+
       return (
         <div className='min-h-[100vh] min-w-[100vw] forecast-scrollbar text-white md:pt-10 md:p-5 pt-5 p-3' onClick={closeAllDropdowns}>
 
@@ -385,11 +399,19 @@ function App() {
 
               </div>
 
-              <div>
-                <h4 className='text-Neutral-300 text-xl'>Daily Forecast</h4>
+              <div className='mt-10 xl:w-[90%] lg:justify-self-end'>
+                <h4 className='text-Neutral-200 text-xl mb-7'>Daily Forecast</h4>
+
+                <div className='grid md:grid-cols-7 xl:grid-cols-7 lg:grid-cols-5 grid-cols-2 2xs:grid-cols-3 gap-3'>
+                  {
+                    weather.daily.time.map((time,index)=>
+                        <DailyStats key={time} dayName={days[(date.getDay()+index)%7]} min_temp={weather.daily.temperature_2m_min[index]} max_temp={weather.daily.temperature_2m_max[index]} w_code={WCodetoImg(weather.daily.weather_code[index])} />
+                    )
+                  }
+                </div>
               </div>
             </div>
-            <div className='h-[538px] lg:h-[620px] overflow-hidden overflow-y-auto forecast-scrollbar xl:w-[80%] w-full bg-Neutral-800 2xs:pt-0 xs:pt-0 md:pt-0 pt-5 px-2 rounded-xl'> {/* hourly weather div*/}
+            <div className='h-[370px] xl:h-[710px] lg:h-[960px] xl:w-[80%] w-full bg-Neutral-800 2xs:pt-0 xs:pt-0 md:pt-0 pt-5 px-2 rounded-xl'> {/* hourly weather div*/}
               <span className='2xs:flex justify-between items-center md:mt-0 2xs:mt-[-20px]'>
 
                 <p className='2xs:text-xl font-semibold 2xs:ms-5 ms-2'>Hourly forecast</p>
@@ -410,31 +432,34 @@ function App() {
                 </div>
                 
               </span>
-              {forecastDay!=0 &&
-                hourly.map((ihour)=>{
-                  return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
-                })
-              }
-              {
-                forecastDay===0 &&
-                <div>
-                  {
-                    hourly.map((ihour,index)=>{
-                      if(index>=23-hour+1 && forecastDay==0){return null;}
+
+              <div className='h-[280px] xl:h-[620px] lg:h-[860px] ps-2 overflow-hidden overflow-y-auto forecast-scrollbar'> 
+                  {forecastDay!=0 &&
+                    hourly.map((ihour)=>{
                       return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
                     })
                   }
-                <span>
-                   <p className='text-Neutral-300 text-lg my-3 ms-2'>Past hours</p>
                   {
-                    hourly.map((ihour,index)=>{
-                      if(index<=23-hour){return null;}
-                      return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
-                    })
+                    forecastDay===0 &&
+                    <div>
+                      {
+                        hourly.map((ihour,index)=>{
+                          if(index>=23-hour+1 && forecastDay==0){return null;}
+                          return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                        })
+                      }
+                    <span>
+                      <p className='text-Neutral-300 text-lg my-3 ms-2'>Past hours</p>
+                      {
+                        hourly.map((ihour,index)=>{
+                          if(index<=23-hour){return null;}
+                          return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                        })
+                      }
+                    </span>
+                    </div>
                   }
-                </span>
-                </div>
-              }
+              </div>
               
             </div>
 

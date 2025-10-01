@@ -68,12 +68,14 @@ export type weather = {
     },
     daily_units: {
         time: string,
+        weather_code: string,
         temperature_2m_max: string,
         temperature_2m_min: string,
         precipitation_probability_max: string,
     },
     daily: {
       time: Array<string>,
+      weather_code: Array<number>,
       temperature_2m_max: Array<number>,
       temperature_2m_min: Array<number>,
       precipitation_probability_max: Array<number>,
@@ -124,12 +126,14 @@ export const defWeather: weather = {
   },
   daily_units: {
     time: "",
+    weather_code: "",
     temperature_2m_max: "",
     temperature_2m_min: "",
     precipitation_probability_max: "",
   },
     daily: {
       time:[""],
+      weather_code: [0],
       temperature_2m_min: [0],
       temperature_2m_max: [0],
       precipitation_probability_max: [0],
