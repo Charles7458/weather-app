@@ -25,10 +25,12 @@ import storm from './assets/images/icon-storm.webp';
 import sunny from './assets/images/icon-sunny.webp';
 
 
-function HourlyDiv(hr:{img:string, hour:string, temperature:number}){
+function HourlyDiv(hr:{img:string, hour:string, temperature:number}) {
+
   let hour = new Date(hr.hour).getHours();
-  const AMPM = hour>12 ? "PM" : "AM";
+  const AMPM = hour>=12 ? "PM" : "AM";
   let Hour12 = hour%12;
+
   if(Hour12==0){
     Hour12 = 12;
   }
@@ -37,10 +39,20 @@ function HourlyDiv(hr:{img:string, hour:string, temperature:number}){
     <div className='flex h-16 w-full bg-Neutral-700 border border-Neutral-600 shadow-md rounded-xl px-5 mb-5 justify-between items-center'>
       <span className='flex items-center'>
         <img src={hr.img} className='h-16 py-1' />
-        <p className='ms-3 text-xl'>{Hour12} {AMPM}</p>
+        <p className='ms-3 text-xl text-Neutral-200 font-bri'>{Hour12} {AMPM}</p>
       </span>
       <p className='text-lg'>{hr.temperature}&deg;</p>
      </div>
+  )
+}
+
+function CurrentStats(fn:{name:string,data:number, unit:string}) {
+
+  return(
+    <div className='bg-Neutral-800 h-28 xl:w-[181px] lg:w-[27.5vw] w-[45vw] 2xs:ps-5 ps-3 pt-2 rounded-xl border border-Neutral-600'>
+      <h4 className='mb-3 text-Neutral-300 font-dmsans text-lg'>{fn.name}</h4>
+      <p className='text-Neutral-200 2xs:text-4xl text-3xl font-bri'>{fn.data}{fn.unit}</p>
+    </div>
   )
 }
 
@@ -87,7 +99,7 @@ function App() {
     const [isImperial, setIsImperial] = useState(checkIsImperial(wUnits));
     const [isMetric, setIsMetric] = useState(checkIsMetric(wUnits));
 
-    // const [forecastDay, setForecastDay] = useState(date.getDay() || "-")
+    const [forecastDay, setForecastDay] = useState<number>(0);
 
     const [hourly, setHourly] = useState<Array<hourlyData>>([{time:"",temp:0,w_code:0}])
 
@@ -134,16 +146,14 @@ function App() {
       else {
         const start = 24*theDay;
         const end = start + 24;
-        for(let i = start;i<end+24;i++) {
+        for(let i = start;i<end;i++) {
           const time = weather.hourly.time[i];
           const w_code = weather.hourly.weather_code[i];
           const temp = weather.hourly.temperature_2m[i];
           newHourlyData.push({time: time, w_code: w_code, temp: temp})
         }
       }
-      console.log(newHourlyData)
       setHourly(newHourlyData);
-
     }
 
     function savePrefUnits(){
@@ -188,7 +198,7 @@ function App() {
       setIsMetric(checkIsMetric(wUnits));
     }
 
-    
+        
 
     useEffect(()=>{ //changing theme according to day or night at the initial load of the page
       var doc = document.documentElement;
@@ -202,7 +212,7 @@ function App() {
     //   setLoc({latitude: coords?.latitude || 52.52,longitude: coords?.longitude || 13.41})
     // },[coords])
 
-    useEffect(()=>{
+    useEffect(()=>{        // fetches current location of the user defaults to berlin if not fetched
       if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -227,12 +237,12 @@ function App() {
       }
     },[])
 
-    useEffect(()=>{ //getting weather and city
+    useEffect(()=>{ //getting weather and city at initial load and when dependencies change
       if(!isLocPending){
             setIsLoading(true)
             getCity();
             getAllWeather();
-            console.log("wUnits changed")
+            console.log(weather)
       }
       setIsLoading(false)
     },[isLocPending, coords, hour, wUnits])
@@ -241,25 +251,24 @@ function App() {
       setShowUnitsDropdown(false);
       setShowDaysDropdown(false);
     }
-    useEffect(()=>{
+
+    useEffect(()=>{               //update hourly forecast if weather or forecast day changes
       if(weather!=null){
-        getHourly(0);
+        getHourly(forecastDay);
       }
-    },[weather])
+    },[weather,forecastDay])
   
   // console.log(document.documentElement.getAttribute("data-theme"))
+
   if(isLoading){
     return(
       <div> 
-
+        Page is loading...
       </div>
     )
   }
 
-
-  else{
-  
-    if(isError){
+  else if(isError){
       return(
         <div className='min-h-[100vh] min-w-[100vw] text-white md:pt-10 md:p-5 pt-5 p-3'>
 
@@ -298,7 +307,7 @@ function App() {
 
     else{
       return (
-        <div className='min-h-[100vh] min-w-[100vw] text-white md:pt-10 md:p-5 pt-5 p-3' onClick={closeAllDropdowns}>
+        <div className='min-h-[100vh] min-w-[100vw] forecast-scrollbar text-white md:pt-10 md:p-5 pt-5 p-3' onClick={closeAllDropdowns}>
 
           <div className="flex mx-2 md:mx-[5vw] justify-between">
 
@@ -329,68 +338,100 @@ function App() {
             <label className=''>
               <input type='search' value={search} onChange={e=>setSearch(e.target.value)} aria-label='search location'
                 className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
-              <img src={searchIcon} className='relative bottom-9 left-6' alt='search icon'/> 
+              <img src={searchIcon} className='relative bottom-9.5 left-6' alt='search icon'/> 
             </label>
-            <button className='bg-Blue-500 light:bg-Neutral-0 light:text-black light:hover:bg-Neutral-200 rounded-xl font-semibold px-7 py-4 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-Blue-500/70 ease-in'>
+            <button className='bg-Blue-500 font-bri font-semibold text-lg light:bg-Neutral-0 light:text-black light:hover:bg-Neutral-200 rounded-xl px-7 py-3 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-Blue-500/70 ease-in'>
               Search
             </button>
           </div>
           <div className='my-grid gap-10 mx-auto lg:gap-3 xl:gap-10'>
 
-            <div className='md:grid md:grid-cols-2 md:align-middle today-bg md:items-center md:ps-10 lg:ps-5 xl:ps-10 xl:py-10 justify-self-end justify-between'> {/* today bg div*/}
+            <div> {/*div wrapping today div and feels like,preceptitation etc.*/}
 
-                <div className='md:block hidden'>{/*city div (big screens)*/}
-                  <p className='xl:text-4xl lg:text-3\2xl md:text-4xl font-dmsans mb-3'>{cityString}</p>
-                  <p className='text-gray-300/60 text-lg'>{dateString}</p>
-                </div>
+              <div className='md:grid md:grid-cols-2 today-bg rounded-xl justify-self-end justify-between md:items-center lg:items-center xl:items-center xl:w-[90%] md:ps-10  lg:ps-5 xl:ps-10 w-fit pt-0.5'> {/* today bg div*/}
 
-                <div className='md:flex hidden align-middle items-center justify-self-start pe-10'>{/* temp weather div (big screens) */}
-                  <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
-                  <p className='xl:text-8xl lg:text-7xl md:text-8xl font-dmsans italic ms-7'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
-                </div>
+                  <div className='md:block hidden'>{/*city div (big screens)*/}
+                    <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
+                    <p className='text-gray-300/60 text-lg'>{dateString}</p>
+                  </div>
 
-                <div className='md:hidden text-center mt-10 mb-6'>{/*city div (small screens)*/}
-                  <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
-                  <p className='text-gray-300/60 text-lg'>{dateString}</p>
-                </div>
+                  <div className='md:flex hidden align-middle items-center justify-self-start pe-5'>{/* temp weather div (big screens) */}
+                    <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
+                    <p className='xl:text-8xl lg:text-7xl md:text-8xl font-dmsans italic ms-7'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
+                  </div>
 
-                <div className='md:hidden flex align-middle justify-center items-center'>{/* temp weather div (small screens) */}
-                  <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
-                  <p className='text-8xl font-dmsans italic ms-5'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
-                </div>
+                  <div className='md:hidden text-center mt-5 2xs:mb-6 mb-3'>{/*city div (small screens)*/}
+                    <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
+                    <p className='text-gray-300/60 text-lg'>{dateString}</p>
+                  </div>
 
-                <div className='grid grid-cols-4'> {/*feels like, precipitation,etc. divs*/}
+                  <div className='md:hidden flex align-middle justify-center items-center'>{/* temp weather div (small screens) */}
+                    <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
+                    <p className='2xs:text-9xl text-6xl font-dmsans italic ms-5'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
+                  </div>
+              </div>
 
-                </div>
+
+              <div className='w-fit justify-self-end grid xl:grid-cols-4 grid-cols-2 gap-5 mt-5'> {/*current stats wrapper grid*/}
+
+                <CurrentStats name='Feels Like' data={weather.current.apparent_temperature} unit="°"/>{/*feels like*/}
+
+                <CurrentStats name='Humidity' data={weather.current.relative_humidity_2m} unit='%' /> {/*humidity*/}
+
+                <CurrentStats name='Wind' data={weather.current.wind_speed_10m} unit={wUnits.wind_speed}/> {/*wind*/}
+
+                <CurrentStats name='Preciptiation' data={weather.current.precipitation} unit={wUnits.precipitation}/> {/*precipitation*/}
+
+              </div>
 
             </div>
+            <div className='h-[538px] lg:h-[620px] overflow-hidden overflow-y-auto forecast-scrollbar xl:w-[80%] w-full bg-Neutral-800 2xs:pt-0 xs:pt-0 md:pt-0 pt-5 px-2 rounded-xl'> {/* hourly weather div*/}
+              <span className='2xs:flex justify-between items-center md:mt-0 2xs:mt-[-20px]'>
 
-            <div className='h-[670px] overflow-hidden overflow-y-auto forecast-scrollbar xl:w-[80%] w-full bg-Neutral-800 pt-5 ps-3 rounded-xl pe-5'> {/* hourly weather div*/}
-              <span className='flex justify-between items-center mb-5'>
+                <p className='2xs:text-xl font-semibold 2xs:ms-5 ms-2'>Hourly forecast</p>
 
-                <p className='text-xl font-semibold ms-5'>Hourly forecast</p>
+                <div className='relative 2xs:my-0 2xs:ms-0 my-5 ms-2'>{/*day dropdown button*/}
 
-                <div className='relative'>{/*day dropdown button*/}
-
-                  <button className='bg-Neutral-700 rounded-lg py-2 me-5 hover:cursor-pointer hover:bg-Neutral-800'
+                  <button className='bg-Neutral-700 rounded-lg py-2 me-5 hover:cursor-pointer hover:bg-Neutral-600 ease-in'
                     onClick={e=>{e.stopPropagation();setShowDaysDropdown(!showDaysDropdown)}}> 
                     
-                    <div className='flex gap-x-3 ps-4 pe-3'>
-                      {day}
+                    <div className='flex gap-x-3 ps-4 pe-3 font-bri'>
+                      {days[(date.getDay()+forecastDay)%7]}
                       <img src={dropdown}/>
                     </div>
 
                   </button>
 
-                  <DaysDropdown show={showDaysDropdown}/>
+                  <DaysDropdown changeDay={setForecastDay} days={days} show={showDaysDropdown} today={date.getDay()} selectedDay={forecastDay} />
                 </div>
                 
               </span>
-              {
+              {forecastDay!=0 &&
                 hourly.map((ihour)=>{
-                  return <HourlyDiv img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                  return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
                 })
               }
+              {
+                forecastDay===0 &&
+                <div>
+                  {
+                    hourly.map((ihour,index)=>{
+                      if(index>=23-hour+1 && forecastDay==0){return null;}
+                      return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                    })
+                  }
+                <span>
+                   <p className='text-Neutral-300 text-lg my-3 ms-2'>Past hours</p>
+                  {
+                    hourly.map((ihour,index)=>{
+                      if(index<=23-hour){return null;}
+                      return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                    })
+                  }
+                </span>
+                </div>
+              }
+              
             </div>
 
           </div>
@@ -500,7 +541,7 @@ function App() {
         //   return "storm";
         return CodeMap[code];
       }
-  }
 }
+
 
 export default App

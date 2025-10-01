@@ -1,6 +1,6 @@
 import axios, {type AxiosResponse } from 'axios';
 
-export type location = {
+export type locationSearchResult = {
     id: number;
     name: string;
     latitude: number;
@@ -34,6 +34,7 @@ export type weather = {
     current_units: {
         time: string,
         interval: string,
+        wind_speed_10m: string,
         temperature_2m: string,
         relative_humidity_2m: string,
         apparent_temperature: string,
@@ -43,6 +44,7 @@ export type weather = {
     current: {
         time: string,
         interval: number,
+        wind_speed_10m: number,
         temperature_2m: number,
         relative_humidity_2m: number,
         apparent_temperature: number,
@@ -89,6 +91,7 @@ export const defWeather: weather = {
     current_units: {
         time: "",
         interval: "",
+        wind_speed_10m: "km/h",
         temperature_2m: "",
         relative_humidity_2m: "",
         apparent_temperature: "",
@@ -98,6 +101,7 @@ export const defWeather: weather = {
     current: {
         time: "",
         interval: 0,
+        wind_speed_10m: 0,
         temperature_2m: 0,
         relative_humidity_2m: 0,
         apparent_temperature: 0,
@@ -132,8 +136,8 @@ export const defWeather: weather = {
     }
 }
 
-type locationList = {
-    "results": Array<location>
+type locationSearchList = {
+    "results": Array<locationSearchResult>
 }
 
 export type units = {
@@ -170,19 +174,18 @@ export async function getWeather(lat: number|undefined, long: number|undefined, 
   const temp_unit = units.temperature=="celsius" ? "": `&temperature_unit=${units.temperature}`
   const wind_speed = units.wind_speed=="km/h" ? "": `&wind_speed_unit=${units.wind_speed}`
   const precipitation = units.precipitation=="mm" ? "": `&precipitation_unit=${units.precipitation}`
-  const result: AxiosResponse = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&daily=weather_code&`+
-    "hourly=temperature_2m,weather_code&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=auto"
+  const result: AxiosResponse = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&daily=weather_code,`+
+    "temperature_2m_max,temperature_2m_min&hourly=temperature_2m,weather_code&current=wind_speed_10m,temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=auto"
     +temp_unit+wind_speed+precipitation);
+
   const weather:weather = result.data
-  console.log("Weather API call:\n"+`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&daily=weather_code&`+
-    "hourly=temperature_2m,weather_code&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=auto"
-    +temp_unit+wind_speed+precipitation)
+
   return weather;
 }
 
-export async function searchLocation(name: string): Promise<Array<location> | null> {
+export async function searchLocation(name: string): Promise<Array<locationSearchResult> | null> {
       const location = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=5&language=en&format=json`);
-      const locationList: locationList = location.data;
+      const locationList: locationSearchList = location.data;
       return locationList.results;
 }     
 
