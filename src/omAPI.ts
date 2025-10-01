@@ -142,45 +142,20 @@ export type units = {
   precipitation: string;
 }
 
-let units = {
-  temperature: "celsius",
-  wind_speed: "km/h",
-  precipitation: "mm"
+export const temperatures = [["Celsius(°C)","celsius"], ["Fahrenheit(°F)","fahrenheit"]]
+export const wind_speeds = [["km/h","km/h"],["mph","mph"],["m/s","ms"],["Knots","kn"]]
+export const preceptiations = [["Millimeters(mm)","mm"],["Inch (in)","inch"]]
+
+
+
+export function checkIsImperial(units:units) {
+  return units.temperature=="fahrenheit" && units.wind_speed=="mph" && units.precipitation=="inch";
 }
 
-
-
-export function setUnits(parameter:string, unit:string){
-  units = {...units,[parameter]:unit}
-  console.log(units)
-}
-
-export function setToImperial(){
-  units = 
-  {
-    temperature: "farenheit",
-    wind_speed: "mph",
-    precipitation: "inch"
-  }
-  console.log(units)
-}
-
-export function setToMetric(){
-  units = 
-  {
-    temperature: "celsius",
-    wind_speed: "km/h",
-    precipitation: "mm"
-  }
-}
-
-export function checkIsImperial() {
-  return units.temperature=="farenheit" && units.wind_speed=="mph" && units.precipitation=="inch";
-}
-
-export function checkIsMetric() {
+export function checkIsMetric(units:units) {
   return units.temperature=="celsius" && units.wind_speed=="km/h" && units.precipitation=="mm";
 }
+
 /*
  temperature:   farenheit -> &temperature_unit=farenheit , default = celsius
  Wind Speed:    m/s -> &wind_speed_unit=ms , mph -> &wind_speed_unit=mph , knots = &wind_speed_unit=kn , default = km/h
@@ -190,15 +165,18 @@ export function checkIsMetric() {
 // celsius = &#8451; , farenheit = &#8457;
 //api for getting current weather along with 7 days ahead and hourly weather
 
-export async function getWeather(lat: number|undefined, long: number|undefined): Promise<weather | null> {
+export async function getWeather(lat: number|undefined, long: number|undefined, units:units): Promise<weather | null> {
   if(lat==undefined || long == undefined){return null;}
   const temp_unit = units.temperature=="celsius" ? "": `&temperature_unit=${units.temperature}`
   const wind_speed = units.wind_speed=="km/h" ? "": `&wind_speed_unit=${units.wind_speed}`
-  const precipitation = units.precipitation=="millimeter" ? "": `&precipitation_unit=${units.precipitation}`
+  const precipitation = units.precipitation=="mm" ? "": `&precipitation_unit=${units.precipitation}`
   const result: AxiosResponse = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&daily=weather_code&`+
     "hourly=temperature_2m,weather_code&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=auto"
     +temp_unit+wind_speed+precipitation);
   const weather:weather = result.data
+  console.log("Weather API call:\n"+`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&daily=weather_code&`+
+    "hourly=temperature_2m,weather_code&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=auto"
+    +temp_unit+wind_speed+precipitation)
   return weather;
 }
 

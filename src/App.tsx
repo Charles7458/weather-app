@@ -1,6 +1,6 @@
 import { useEffect, useState} from 'react'
 import axios from 'axios';
-import { checkIsImperial, checkIsMetric, defWeather, getWeather, setToImperial, setToMetric, setUnits} from './omAPI';//setUnits, searchLocation
+import { checkIsImperial, checkIsMetric, defWeather, getWeather} from './omAPI';//setUnits, searchLocation
 // import type {weather}  from './omAPI';
 import './App.css';
 import { DaysDropdown, UnitsDropdown } from './dropdown';
@@ -9,7 +9,8 @@ import logo from './assets/images/logo.svg';
 import errorIcon from './assets/images/icon-error.svg';
 import retryIcon from './assets/images/icon-retry.png';
 // import loading from './assets/images/icon-loading.svg';
-import units from './assets/images/icon-units.svg'
+import type { units } from './omAPI';
+import unitsIcon from './assets/images/icon-units.svg'
 
 import dropdown from './assets/images/icon-dropdown.svg';
 import searchIcon from './assets/images/icon-search.svg';
@@ -33,7 +34,7 @@ function HourlyDiv(hr:{img:string, hour:string, temperature:number}){
   }
 
   return(
-    <div className='flex h-16 w-full bg-gray-500/15 rounded-xl px-5 mb-5 justify-between items-center'>
+    <div className='flex h-16 w-full bg-Neutral-700 border border-Neutral-600 shadow-md rounded-xl px-5 mb-5 justify-between items-center'>
       <span className='flex items-center'>
         <img src={hr.img} className='h-16 py-1' />
         <p className='ms-3 text-xl'>{Hour12} {AMPM}</p>
@@ -48,6 +49,12 @@ type hourlyData = {
   temp:number,
   w_code:number
 }
+
+const default_units =  {
+    temperature: "celsius",
+    wind_speed: "km/h",
+    precipitation: "mm"
+  } 
 
 function App() {
   
@@ -65,10 +72,22 @@ function App() {
     const dateString = `${day}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
     const hour = date.getHours();
 
-    const [isImperial, setIsImperial] = useState(false);
-    const [isMetric, setIsMetric] = useState(false);
+    const [wUnits,setWUnits] = useState<units>(
+      ()=>{
+        try{
+          const pref_units = localStorage.getItem("w_units")
+          return pref_units ? JSON.parse(pref_units) :  default_units;
+        }
+        catch{
+          console.log("error accessing preferred units")
+          return default_units;
+        }
+      })
 
-    const [forecastDay, setForecastDay] = useState(date.getDay() || "-")
+    const [isImperial, setIsImperial] = useState(checkIsImperial(wUnits));
+    const [isMetric, setIsMetric] = useState(checkIsMetric(wUnits));
+
+    // const [forecastDay, setForecastDay] = useState(date.getDay() || "-")
 
     const [hourly, setHourly] = useState<Array<hourlyData>>([{time:"",temp:0,w_code:0}])
 
@@ -78,7 +97,7 @@ function App() {
     
     
     async function getAllWeather() { // function that gets the forecast
-        const currWeather = await getWeather(coords.latitude, coords.longitude);
+        const currWeather = await getWeather(coords.latitude, coords.longitude, wUnits || default_units);
         if(currWeather===null){
           setIsError(true);
           return;
@@ -99,7 +118,13 @@ function App() {
     function getHourly(theDay:number) {
       let newHourlyData : Array<hourlyData>= []
       if(theDay===0){
-        for(let i=hour-1;i<hour+7;i++){
+        for(let i=hour;i<=23;i++){
+          const time = weather.hourly.time[i];
+          const w_code = weather.hourly.weather_code[i];
+          const temp = weather.hourly.temperature_2m[i];
+          newHourlyData.push({time: time, w_code: w_code, temp: temp})
+        }
+        for(let i=0;i<hour;i++){
           const time = weather.hourly.time[i];
           const w_code = weather.hourly.weather_code[i];
           const temp = weather.hourly.temperature_2m[i];
@@ -121,23 +146,46 @@ function App() {
 
     }
 
+    function savePrefUnits(){
+      localStorage.setItem("w_units",JSON.stringify(wUnits))
+    }
+
+    function unitChange(parameter:string, unit:string){
+      setWUnits({...wUnits,[parameter]:unit})
+      console.log(parameter+" changed to "+ unit)
+      savePrefUnits()
+    }
+
+
+
     function handleSetImperial(){
+      setWUnits(
+      {
+        temperature: "fahrenheit",
+        wind_speed: "mph",
+        precipitation: "inch"
+      });
       setIsImperial(true);
       setIsMetric(false)
-      setToImperial();
+      savePrefUnits()
     }
 
     function handleSetMetric(){
+      setWUnits(
+      {
+        temperature: "celsius",
+        wind_speed: "km/h",
+        precipitation: "mm"
+      });
       setIsImperial(false);
-      setIsMetric(true);
-      setToMetric();
+      setIsMetric(true);      
+      savePrefUnits()
     }
 
     function handleUnitChange(parameter:string, unit:string){
-      setIsImperial(checkIsImperial());
-      setIsMetric(checkIsMetric());
-      setUnits(parameter,unit);
-      
+      unitChange(parameter,unit);
+      setIsImperial(checkIsImperial(wUnits));
+      setIsMetric(checkIsMetric(wUnits));
     }
 
     
@@ -156,13 +204,22 @@ function App() {
 
     useEffect(()=>{
       if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(async (position) => {
-          setCoords({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          })
-          setIsLocPending(false)
-        })
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            setCoords({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            })
+            setIsLocPending(false)
+          },
+          (error)=>{
+            console.error(error);
+            console.log("error while accessing location")
+          },
+          {//options
+            enableHighAccuracy:true, timeout:10000
+          }
+      )
       }
       else{
         console.log("Geolocation is not supported by this browser.")
@@ -172,24 +229,24 @@ function App() {
 
     useEffect(()=>{ //getting weather and city
       if(!isLocPending){
-            getAllWeather();
+            setIsLoading(true)
             getCity();
-            console.log(weather)
+            getAllWeather();
+            console.log("wUnits changed")
       }
       setIsLoading(false)
-    },[isLocPending,coords])
+    },[isLocPending, coords, hour, wUnits])
 
+    function closeAllDropdowns(){
+      setShowUnitsDropdown(false);
+      setShowDaysDropdown(false);
+    }
     useEffect(()=>{
-      if(!isLoading){
+      if(weather!=null){
         getHourly(0);
       }
-    },[hour,weather])
-
-    // function changeUnits(parameter: string, unit: string){
-    //   setUnits(parameter, unit);
-    //   getAllWeather();
-    // }
-    
+    },[weather])
+  
   // console.log(document.documentElement.getAttribute("data-theme"))
   if(isLoading){
     return(
@@ -210,9 +267,9 @@ function App() {
 
             <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
 
-            <button className='md:h-10 h-8 bg-gray-600/30 rounded-lg py-1 hover:cursor-pointer hover:bg-gray-600/50'> {/*Units button*/}
+            <button className='md:h-10 h-8 bg-Neutral-800 rounded-lg py-1 hover:cursor-pointer hover:bg-Neutral-700'> {/*Units button*/}
               <div className='flex gap-x-3 px-3'>
-                <img src={units} />
+                <img src={unitsIcon} />
                 Units
                 <img src={dropdown}/>
               </div>
@@ -241,23 +298,23 @@ function App() {
 
     else{
       return (
-        <div className='min-h-[100vh] min-w-[100vw] text-white md:pt-10 md:p-5 pt-5 p-3'>
+        <div className='min-h-[100vh] min-w-[100vw] text-white md:pt-10 md:p-5 pt-5 p-3' onClick={closeAllDropdowns}>
 
           <div className="flex mx-2 md:mx-[5vw] justify-between">
 
             <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
 
             <div className='relative'>
-              <button className='md:h-10 h-8 bg-slate-800 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-gray-600/50'
-                onClick={()=>setShowUnitsDropdown(!showUnitsDropdown)}> {/*Units button*/}
+              <button className='md:h-10 h-8 bg-Neutral-700 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-Neutral-600'
+                onClick={e=>{e.stopPropagation();setShowUnitsDropdown(!showUnitsDropdown)}}> {/*Units button*/}
                 <div className='flex gap-x-3 px-3'>
-                  <img src={units} />
+                  <img src={unitsIcon} />
                   Units
                   <img src={dropdown} className={showUnitsDropdown? "rotate-180":""}/>
                 </div>
               </button>
 
-              <UnitsDropdown show={showUnitsDropdown} isImperial={isImperial} isMetric={isMetric} setToImperial={handleSetImperial} setToMetric={handleSetMetric} changeUnits={handleUnitChange}/>
+              <UnitsDropdown show={showUnitsDropdown} units={wUnits} isImperial={isImperial} isMetric={isMetric} setToImperial={handleSetImperial} setToMetric={handleSetMetric} changeUnits={handleUnitChange}/>
             </div>
             
 
@@ -271,10 +328,12 @@ function App() {
           <div className='md:flex items-center justify-center md:mb-10'>
             <label className=''>
               <input type='search' value={search} onChange={e=>setSearch(e.target.value)} aria-label='search location'
-                className='bg-gray-500/30 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
+                className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
               <img src={searchIcon} className='relative bottom-9 left-6' alt='search icon'/> 
             </label>
-            <button className='bg-indigo-600/90 rounded-xl font-semibold px-7 py-4 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-indigo-700'>Search</button>
+            <button className='bg-Blue-500 light:bg-Neutral-0 light:text-black light:hover:bg-Neutral-200 rounded-xl font-semibold px-7 py-4 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-Blue-500/70 ease-in'>
+              Search
+            </button>
           </div>
           <div className='my-grid gap-10 mx-auto lg:gap-3 xl:gap-10'>
 
@@ -306,18 +365,18 @@ function App() {
 
             </div>
 
-            <div className='h-fit xl:w-[80%] w-full bg-gray-500/30 py-5 px-3 rounded-xl'> {/* hourly weather div*/}
+            <div className='h-[670px] overflow-hidden overflow-y-auto forecast-scrollbar xl:w-[80%] w-full bg-Neutral-800 pt-5 ps-3 rounded-xl pe-5'> {/* hourly weather div*/}
               <span className='flex justify-between items-center mb-5'>
 
                 <p className='text-xl font-semibold ms-5'>Hourly forecast</p>
 
                 <div className='relative'>{/*day dropdown button*/}
 
-                  <button className='md:h-10 h-8 bg-gray-500/15 rounded-lg py-1 me-5 hover:cursor-pointer hover:bg-gray-500/25'
-                    onClick={()=>setShowDaysDropdown(!showDaysDropdown)}> 
+                  <button className='bg-Neutral-700 rounded-lg py-2 me-5 hover:cursor-pointer hover:bg-Neutral-800'
+                    onClick={e=>{e.stopPropagation();setShowDaysDropdown(!showDaysDropdown)}}> 
                     
                     <div className='flex gap-x-3 ps-4 pe-3'>
-                      {typeof(forecastDay)=="number" ? days[forecastDay] : forecastDay}
+                      {day}
                       <img src={dropdown}/>
                     </div>
 
