@@ -24,6 +24,17 @@ import snow from './assets/images/icon-snow.webp';
 import storm from './assets/images/icon-storm.webp';
 import sunny from './assets/images/icon-sunny.webp';
 
+type hourlyData = {
+  time: string,
+  temp:number,
+  w_code:number
+}
+
+const default_units =  {
+    temperature: "celsius",
+    wind_speed: "km/h",
+    precipitation: "mm"
+} 
 
 function HourlyDiv(hr:{img:string, hour:string, temperature:number}) {
 
@@ -46,27 +57,17 @@ function HourlyDiv(hr:{img:string, hour:string, temperature:number}) {
   )
 }
 
-function CurrentStats(fn:{name:string,data:number, unit:string}) {
+function CurrentStats(fn:{name:string,data:string, unit:string}) {
 
   return(
     <div className='bg-Neutral-800 h-28 xl:w-[181px] lg:w-[27.5vw] w-[45vw] 2xs:ps-5 ps-3 pt-2 rounded-xl border border-Neutral-600'>
       <h4 className='mb-3 text-Neutral-300 font-dmsans text-lg'>{fn.name}</h4>
-      <p className='text-Neutral-200 2xs:text-4xl text-3xl font-bri'>{fn.data}{fn.unit}</p>
+      <p className='text-Neutral-200 2xs:text-4xl text-5xl font-dmsans'>{fn.data} 
+        <span className='text-2xl ms-2'>{fn.unit}</span>
+      </p>
     </div>
   )
 }
-
-type hourlyData = {
-  time: string,
-  temp:number,
-  w_code:number
-}
-
-const default_units =  {
-    temperature: "celsius",
-    wind_speed: "km/h",
-    precipitation: "mm"
-  } 
 
 function App() {
   
@@ -372,18 +373,21 @@ function App() {
               </div>
 
 
-              <div className='w-fit justify-self-end grid xl:grid-cols-4 grid-cols-2 gap-5 mt-5'> {/*current stats wrapper grid*/}
+              <div className='w-fit justify-self-end grid xl:grid-cols-4 grid-cols-2 gap-5 mt-10'> {/*current stats wrapper grid*/}
 
-                <CurrentStats name='Feels Like' data={weather.current.apparent_temperature} unit="°"/>{/*feels like*/}
+                <CurrentStats name='Feels Like' data={`${weather.current.apparent_temperature}`+"°"} unit=""/>{/*feels like*/}
 
-                <CurrentStats name='Humidity' data={weather.current.relative_humidity_2m} unit='%' /> {/*humidity*/}
+                <CurrentStats name='Humidity' data={`${weather.current.relative_humidity_2m}`+'%'} unit='' /> {/*humidity*/}
 
-                <CurrentStats name='Wind' data={weather.current.wind_speed_10m} unit={wUnits.wind_speed}/> {/*wind*/}
+                <CurrentStats name='Wind' data={`${weather.current.wind_speed_10m}`} unit={wUnits.wind_speed}/> {/*wind*/}
 
-                <CurrentStats name='Preciptiation' data={weather.current.precipitation} unit={wUnits.precipitation}/> {/*precipitation*/}
+                <CurrentStats name='Preciptiation' data={`${weather.current.precipitation}`} unit={wUnits.precipitation}/> {/*precipitation*/}
 
               </div>
 
+              <div>
+                <h4 className='text-Neutral-300 text-xl'>Daily Forecast</h4>
+              </div>
             </div>
             <div className='h-[538px] lg:h-[620px] overflow-hidden overflow-y-auto forecast-scrollbar xl:w-[80%] w-full bg-Neutral-800 2xs:pt-0 xs:pt-0 md:pt-0 pt-5 px-2 rounded-xl'> {/* hourly weather div*/}
               <span className='2xs:flex justify-between items-center md:mt-0 2xs:mt-[-20px]'>

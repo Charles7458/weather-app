@@ -74,7 +74,9 @@ export function DaysDropdown(fn:{show: boolean,today:number,changeDay:(day:numbe
     function DayOption(fnDO:{dayNumber:number}){
         
         return(
-            <button onClick={()=>changeDay(fnDO.dayNumber)} className="block w-full py-2 mt-2 font-semibold rounded-lg hover:bg-Neutral-600 cursor-pointer ease-in">
+            <button onClick={()=>changeDay(fnDO.dayNumber)} 
+                className={fnDO.dayNumber==fn.selectedDay ? "block w-full py-2 mt-2 font-semibold rounded-lg bg-Neutral-600 cursor-pointer ease-in" : 
+                    "block w-full py-2 mt-2 font-semibold rounded-lg hover:bg-Neutral-600 cursor-pointer ease-in"}>
                 {days[(fnDO.dayNumber+fn.today)%7]}
             </button>
         )
@@ -82,7 +84,7 @@ export function DaysDropdown(fn:{show: boolean,today:number,changeDay:(day:numbe
 
     if(fn.show){
         return(
-            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-88 w-70 px-2 absolute right-0 mt-5 z-10">
+            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-88 w-48 px-2 absolute right-4 mt-3 z-10">
 
             {dayKeys.map((d,i)=>
                 <DayOption key={d} dayNumber={i} />
