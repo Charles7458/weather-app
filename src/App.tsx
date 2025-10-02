@@ -278,12 +278,21 @@ function App() {
             })
             setIsLocPending(false)
           },
-          (error)=>{
-            console.error(error);
-            console.log("error while accessing location")
+          (error) => {
+            if (error.code === error.PERMISSION_DENIED) {
+              console.log("User denied location access.");
+              alert("Location access denied. Please enable it in your browser settings.");
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+              console.log("Location information is unavailable.");
+            } else if (error.code === error.TIMEOUT) {
+              console.log("The request to get location timed out.");
+            } else {
+              console.log("An unknown error occurred.", error);
+            }
+            setIsLocPending(false)
           },
           {//options
-            enableHighAccuracy:true, timeout:3000
+            enableHighAccuracy:true, timeout:5000
           }
       )
       }
