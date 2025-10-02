@@ -5,6 +5,7 @@ import checkmark from './assets/images/icon-checkmark.svg';
 import { temperatures, wind_speeds, preceptiations } from './omAPI';
 import { useEffect} from "react";
 import { CircleFlag } from "react-circle-flags";
+import loading from './assets/images/icon-loading.svg'
 
 function Partition(){
     return(
@@ -82,8 +83,9 @@ export function SearchDropdown(fn:{show:boolean,isLoading:boolean, resultList:Ar
 
     if(fn.show && fn.isLoading){
         return(
-            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full md:w-[60vw] lg:w-[40vw] px-2 absolute z-10">
-                ...
+            <div className="flex rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full md:w-[60vw] lg:w-[40vw] px-5 py-3 absolute z-10">
+                <img src={loading} className="rotation me-5 w-6"/>
+                Search in progress
             </div>
         )
     }
@@ -98,7 +100,7 @@ export function SearchDropdown(fn:{show:boolean,isLoading:boolean, resultList:Ar
 
     else if(fn.show && fn.resultList.length>0){
         return(
-            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full md:w-[60vw] lg:w-[40vw] px-2 absolute z-10">
+            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-70 w-full md:w-[60vw] lg:w-[40vw] px-2 absolute z-10">
                 {
                     fn.resultList.map((result,index)=>
                         <SearchOptions handleSelect={()=>handleSelect(index)} country_code={result.country_code.toLowerCase()} key={result.id} id={result.id} placeName={result.name}/>

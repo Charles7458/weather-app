@@ -8,7 +8,6 @@ import { DaysDropdown, SearchDropdown, UnitsDropdown } from './dropdown';
 import logo from './assets/images/logo.svg';
 import errorIcon from './assets/images/icon-error.svg';
 import retryIcon from './assets/images/icon-retry.png';
-// import loading from './assets/images/icon-loading.svg';
 import type { units } from './omAPI';
 import unitsIcon from './assets/images/icon-units.svg'
 
@@ -23,6 +22,7 @@ import rain from './assets/images/icon-rain.webp';
 import snow from './assets/images/icon-snow.webp';
 import storm from './assets/images/icon-storm.webp';
 import sunny from './assets/images/icon-sunny.webp';
+import { LoadingScreen } from './LoadingScreen';
 
 type hourlyData = {
   time: string,
@@ -242,26 +242,29 @@ function App() {
     useEffect(()=>{
       console.log("current hour: "+date.getHours())
     },[date])
+
     useEffect(()=>{ // updates search results
       async function getResults(){
         try{
-          const results = await searchLocation(search)
-          if(results){
-            console.log("search results: "+results[0].name)
-            setSearchResults(results);
-          }
+          setTimeout(async ()=>{
+            const results = await searchLocation(search)
+            if(results){
+              console.log("search results: "+results[0].name)
+              setSearchResults(results);
+              setSearchIsLoading(false)
+            }
+          },300)
         }
         catch(err){
           console.error(err)
+          setSearchIsLoading(false)
         }
         
       }
 
-
       if(search.length>1){
         setSearchIsLoading(true)
         getResults()
-        setSearchIsLoading(false)
       }
     },[search])
 
@@ -292,12 +295,10 @@ function App() {
 
     useEffect(()=>{ //getting weather and city at initial load and when dependencies change
       if(!isLocPending){
-            setIsLoading(true)
-            getCity();
-            getAllWeather();
-            console.log(weather)
-      }
-      setIsLoading(false)
+        setIsLoading(true)
+        getCity();
+        getAllWeather();
+      } 
     },[isLocPending, coords, hour, wUnits])
 
     function closeAllDropdowns(){
@@ -309,23 +310,24 @@ function App() {
       if(weather!=null){
         setIsLoading(true)
         setDate(new Date(weather.current.time))
-        setIsLoading(false)
       }
     },[weather])
 
     useEffect(()=>{               //update hourly forecast if weather or forecast day changes
       if(weather!=null){
         getHourly(forecastDay);
+        setTimeout(()=>{
+          console.log("contents loaded")
+          setIsLoading(false)
+        },2000)   
       }
     },[weather,forecastDay, date])
   
   // console.log(document.documentElement.getAttribute("data-theme"))
 
-  if(isLoading){
+  if(isLoading){ {/* Loading Screen*/}
     return(
-      <div> 
-        Page is loading...
-      </div>
+      <LoadingScreen />
     )
   }
 
@@ -396,7 +398,7 @@ function App() {
           {/* <h1>{coords!=undefined ? `latitude: ${coords?.latitude} longitude: ${coords?.longitude}`: "location is not available"}</h1> */}
 
 
-          <div className='md:flex items-center justify-center md:mb-10'>{/* search bar adn button*/}
+          <div className='md:flex items-center justify-center md:mb-10'>{/* search bar and button*/}
 
               <div className='relative'>
 
@@ -458,7 +460,7 @@ function App() {
               <div className='mt-10 xl:w-[90%] lg:justify-self-end'>
                 <h4 className='text-Neutral-200 text-xl mb-7'>Daily Forecast</h4>
 
-                <div className='grid md:grid-cols-7 xl:grid-cols-7 lg:grid-cols-5 grid-cols-2 2xs:grid-cols-3 gap-3'>
+                <div className='grid md:grid-cols-5 xl:grid-cols-7 lg:grid-cols-5 grid-cols-2 2xs:grid-cols-3  gap-3'>
                   {
                     weather.daily.time.map((time,index)=>
                         <DailyStats key={time} dayName={days[(date.getDay()+index)%7] || ""} min_temp={weather.daily.temperature_2m_min[index]} max_temp={weather.daily.temperature_2m_max[index]} w_code={WCodetoImg(weather.daily.weather_code[index])} />
@@ -467,10 +469,10 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className='h-[370px] xl:h-[710px] lg:h-[960px] xl:w-[80%] w-full bg-Neutral-800 2xs:pt-0 xs:pt-0 md:pt-0 pt-5 px-2 rounded-xl'> {/* hourly weather div*/}
+            <div className='h-[540px] 2xs:h-[500px] xl:h-[680px] lg:h-[930px] md:h-[600px] xl:w-[80%] w-full bg-Neutral-800 2xs:pt-0 xs:pt-0 md:pt-0 pt-5 px-2 rounded-xl'> {/* hourly weather div*/}
               <span className='2xs:flex justify-between items-center md:mt-0 2xs:mt-[-20px]'>
 
-                <p className='2xs:text-xl font-semibold 2xs:ms-5 ms-2'>Hourly forecast</p>
+                <p className='2xs:text-xl font-semibold md:ms-5.5 2xs:ms-5 ms-2'>Hourly forecast</p>
 
                 <div className='relative 2xs:my-0 2xs:ms-0 my-5 ms-2'>{/*day dropdown button*/}
 
@@ -489,7 +491,7 @@ function App() {
                 
               </span>
 
-              <div className='h-[280px] xl:h-[620px] lg:h-[860px] ps-2 overflow-hidden overflow-y-auto forecast-scrollbar'> 
+              <div className='h-[400px] xl:h-[570px] lg:h-[830px] md:h-[500px] ps-2 overflow-hidden overflow-y-auto forecast-scrollbar'> 
                   {forecastDay!=0 &&
                     hourly.map((ihour)=>{
                       return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>

@@ -109,6 +109,9 @@ html,body
     }
 }
 
+.rotation {
+    animation: rotation 3s linear infinite;
+}
 /* @media (max-width: 1024px){
     .my-grid{
         grid-template-columns: 1fr 1fr;
