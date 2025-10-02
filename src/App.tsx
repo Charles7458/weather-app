@@ -314,7 +314,7 @@ function App() {
     },[weather])
 
     useEffect(()=>{               //update hourly forecast if weather or forecast day changes
-      if(weather!=null){
+      if(!isLocPending && weather!=null){
         getHourly(forecastDay);
         setTimeout(()=>{
           console.log("contents loaded")
