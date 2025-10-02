@@ -193,3 +193,41 @@ export async function searchLocation(name: string): Promise<Array<locationSearch
       return locationList.results;
 }     
 
+export type cityNameResult =
+{
+  latitude: number,
+  lookupSource: string,
+  longitude: number,
+  localityLanguageRequested: string,
+  continent: string,
+  continentCode: string,
+  countryName: string,
+  countryCode: string,
+  principalSubdivision: string,
+  principalSubdivisionCode: string,
+  city: string,
+  locality: string,
+  postcode: string,
+  plusCode: string,
+  fips: {
+    state: string,
+    county: string,
+    countySubdivision: string,
+    place: string
+  },
+  localityInfo: 
+    {
+      administrative: Array<admin>
+    }
+  }
+
+type admin = {
+  name: string,
+  description: string,
+  isoName: string,
+  order: number,
+  adminLevel: number,
+  isoCode: string,
+  wikidataId: string,
+  geonameId: number
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState} from 'react'
 import axios from 'axios';
 import { checkIsImperial, checkIsMetric, defWeather, getWeather, searchLocation} from './omAPI';//setUnits, searchLocation
-import type {locationSearchResult}  from './omAPI';
+import type {cityNameResult, locationSearchResult}  from './omAPI';
 import './App.css';
 import { DaysDropdown, SearchDropdown, UnitsDropdown } from './dropdown';
 
@@ -99,7 +99,7 @@ function App() {
     const dateString = `${day}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
     const hour = date.getHours();
 
-    const [wUnits,setWUnits] = useState<units>(
+    const [wUnits,setWUnits] = useState<units>(   //loads preferred units if stored. uses metric units if not stored
       ()=>{
         try{
           const pref_units = localStorage.getItem("w_units")
@@ -137,13 +137,14 @@ function App() {
         // getHourly(0)
         console.log(currWeather)
         console.log(coords.latitude, coords.longitude)
-    }      
+    }
 
     async function getCity(){
         const res = await axios.get(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}&localityLanguage=en`)
-        const location: any = res.data;
+        const location: cityNameResult = res.data;
         if(res.status!=200){setIsError(true)}
-        setCityString(`${location.city}, ${location.countryName}`)
+        const country = location.countryName.replace("(the)","")//replaces '(the)' which sometimes pops up in country name
+        setCityString(`${location.city}, ${country}`)
     }
 
     function getHourly(theDay:number) {
