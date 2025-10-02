@@ -36,7 +36,7 @@ const default_units =  {
     precipitation: "mm"
 } 
 
-function HourlyDiv(hr:{img:string, hour:string, temperature:number}) {
+function HourlyDiv(hr:{img:string, w_name:string, hour:string, temperature:number}) {
 
   let hour = new Date(hr.hour).getHours();
   const AMPM = hour>=12 ? "PM" : "AM";
@@ -49,7 +49,7 @@ function HourlyDiv(hr:{img:string, hour:string, temperature:number}) {
   return(
     <div className='flex h-16 w-[97%] bg-Neutral-700 border border-Neutral-600 shadow-md rounded-xl px-5 mb-5 justify-between items-center me-3'>
       <span className='flex items-center'>
-        <img src={hr.img} className='h-16 py-1' />
+        <img src={hr.img} className='h-16 py-1' alt={hr.w_name} title={hr.w_name}/>
         <p className='ms-3 text-xl text-Neutral-200 font-bri'>{Hour12} {AMPM}</p>
       </span>
       <p className='text-lg'>{hr.temperature}&deg;</p>
@@ -69,11 +69,11 @@ function CurrentStats(fn:{name:string,data:string, unit:string}) {
   )
 }
 
-function DailyStats(fn:{dayName:string,w_code:string,min_temp:number,max_temp:number}){
+function DailyStats(fn:{dayName:string, w_code:string, w_text:string, min_temp:number, max_temp:number}){
   return(
     <div className='bg-Neutral-700 border-2 border-Neutral-600 rounded-2xl px-2 py-3 shadow-2xl'>
       <p className='text-Neutral-300 text-center'>{fn.dayName.substring(0,3)}</p>
-      <img src={fn.w_code} className='md:w-[130px] w-[80px] mx-auto'></img>
+      <img src={fn.w_code} className='md:w-[130px] w-[80px] mx-auto' alt={fn.w_text} title={fn.w_text}></img>
       <div className='flex justify-between'>
         <span className='text-Neutral-300'>{fn.max_temp}&deg;</span>
         <span className='text-Neutral-300'>{fn.min_temp}&deg;</span>
@@ -328,7 +328,7 @@ function App() {
         setTimeout(()=>{
           console.log("contents loaded")
           setIsLoading(false)
-        },2000)   
+        },500)   
       }
     },[weather,forecastDay, date])
   
@@ -346,7 +346,7 @@ function App() {
 
           <div className="flex mx-2 md:mx-[5vw] justify-between">
 
-            <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
+            <img src={logo} className='md:w-fit w-[40vw]' alt='logo'/> {/* logo*/}
 
             <button className='md:h-10 h-8 bg-Neutral-800 rounded-lg py-1 hover:cursor-pointer hover:bg-Neutral-700'> {/*Units button*/}
               <div className='flex gap-x-3 px-3'>
@@ -358,7 +358,7 @@ function App() {
           </div>
 
           <div className='text-center justify-center mt-20'>
-              <img src={errorIcon} className='block mx-auto w-16'/>
+              <img src={errorIcon} className='block mx-auto w-16' alt="error icon"/>
               <p className='my-5 font-bold text-3xl'>
                 Something Went Wrong
               </p>
@@ -472,7 +472,7 @@ function App() {
                 <div className='grid md:grid-cols-5 xl:grid-cols-7 lg:grid-cols-5 grid-cols-2 2xs:grid-cols-3  gap-3'>
                   {
                     weather.daily.time.map((time,index)=>
-                        <DailyStats key={time} dayName={days[(date.getDay()+index)%7] || ""} min_temp={weather.daily.temperature_2m_min[index]} max_temp={weather.daily.temperature_2m_max[index]} w_code={WCodetoImg(weather.daily.weather_code[index])} />
+                        <DailyStats key={time} dayName={days[(date.getDay()+index)%7] || ""} min_temp={weather.daily.temperature_2m_min[index]} max_temp={weather.daily.temperature_2m_max[index]} w_code={WCodetoImg(weather.daily.weather_code[index])} w_text={WCodetoText(weather.daily.weather_code[index])}/>
                     )
                   }
                 </div>
@@ -503,7 +503,7 @@ function App() {
               <div className='h-[400px] xl:h-[570px] lg:h-[830px] md:h-[500px] ps-2 overflow-hidden overflow-y-auto forecast-scrollbar'> 
                   {forecastDay!=0 &&
                     hourly.map((ihour)=>{
-                      return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                      return <HourlyDiv key={ihour.time} w_name={WCodetoText(ihour.w_code)} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
                     })
                   }
                   {
@@ -512,7 +512,7 @@ function App() {
                       {
                         hourly.map((ihour,index)=>{
                           if(index>=23-hour+1 && forecastDay==0){return null;}
-                          return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                          return <HourlyDiv key={ihour.time} w_name={WCodetoText(ihour.w_code)} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
                         })
                       }
                     <span>
@@ -520,7 +520,7 @@ function App() {
                       {
                         hourly.map((ihour,index)=>{
                           if(index<=23-hour){return null;}
-                          return <HourlyDiv key={ihour.time} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
+                          return <HourlyDiv key={ihour.time} w_name={WCodetoText(ihour.w_code)} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>
                         })
                       }
                     </span>

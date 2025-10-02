@@ -120,6 +120,25 @@ export function DaysDropdown(fn:{show: boolean,today:number,changeDay:(day:numbe
     const changeDay = fn.changeDay;
     let selectedDay = fn.selectedDay;
 
+    useEffect(()=>{ //listens for arrow up and arrow down presses
+
+        const handleKeyDown = (event: KeyboardEvent)=>{
+        if(event.key==="ArrowDown" && fn.show){
+            event.preventDefault();
+            changeDay((selectedDay+1)%7);
+            selectedDay=(selectedDay+1)%7;
+        }
+        if(event.key==="ArrowUp" && fn.show){
+            event.preventDefault();
+            selectedDay==0 ? changeDay(6) : changeDay(selectedDay-1);
+            selectedDay= selectedDay==0 ? 6 : selectedDay-1
+        }
+    }
+
+        document.addEventListener("keydown",handleKeyDown);
+        return ()=>document.removeEventListener("keydown",handleKeyDown)
+    },[fn.show])
+
     function DayOption(fnDO:{dayNumber:number}){
         
         return(
@@ -133,27 +152,6 @@ export function DaysDropdown(fn:{show: boolean,today:number,changeDay:(day:numbe
 
     if(fn.show){
 
-        useEffect(()=>{ //listens for arrow up and arrow down presses
-            const handleKeyDown = (event: KeyboardEvent)=>{
-
-            if(event.key==="ArrowDown"){
-                event.preventDefault();
-                changeDay((selectedDay+1)%7);
-                selectedDay=(selectedDay+1)%7;
-            }
-            if(event.key==="ArrowUp"){
-                event.preventDefault();
-                selectedDay==0 ? changeDay(6) : changeDay(selectedDay-1);
-                selectedDay= selectedDay==0 ? 6 : selectedDay-1
-            }
-        }
-
-        document.addEventListener("keydown",handleKeyDown)
-
-        return ()=>document.removeEventListener("keydown",handleKeyDown)
-        },[])
-
-        // document.addEventListener("keydown",
         return(
             <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-88 w-48 px-2 absolute right-4 mt-3 z-10">
 
