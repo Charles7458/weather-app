@@ -1,9 +1,9 @@
 import { useEffect, useState} from 'react'
 import axios from 'axios';
-import { checkIsImperial, checkIsMetric, defWeather, getWeather} from './omAPI';//setUnits, searchLocation
-// import type {weather}  from './omAPI';
+import { checkIsImperial, checkIsMetric, defWeather, getWeather, searchLocation} from './omAPI';//setUnits, searchLocation
+import type {locationSearchResult}  from './omAPI';
 import './App.css';
-import { DaysDropdown, UnitsDropdown } from './dropdown';
+import { DaysDropdown, SearchDropdown, UnitsDropdown } from './dropdown';
 
 import logo from './assets/images/logo.svg';
 import errorIcon from './assets/images/icon-error.svg';
@@ -82,6 +82,9 @@ function DailyStats(fn:{dayName:string,w_code:string,min_temp:number,max_temp:nu
   )
 }
 
+const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const months = ['January',"February",'March','April','May','June','July','August','September','October','November','December'];
+
 function App() {
   
     const [isError, setIsError] = useState(false);
@@ -90,10 +93,8 @@ function App() {
     const [coords, setCoords] = useState<{ latitude: number; longitude: number }>({ latitude: 52.52, longitude: 13.41 });
     const [cityString, setCityString] = useState("")
     const [weather, setWeather] = useState(defWeather);
-    const [search, setSearch] = useState("");
-    const date = new Date();
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const months = ['January',"February",'March','April','May','June','July','August','September','October','November','December'];
+
+    const [date, setDate] = useState(new Date());
     const day = days[date.getDay()];
     const dateString = `${day}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
     const hour = date.getHours();
@@ -109,6 +110,10 @@ function App() {
           return default_units;
         }
       })
+          
+    const [search, setSearch] = useState("");
+    const [searchResults,setSearchResults] = useState<Array<locationSearchResult>>([])
+    const [searchIsLoading, setSearchIsLoading] = useState(false);
 
     const [isImperial, setIsImperial] = useState(checkIsImperial(wUnits));
     const [isMetric, setIsMetric] = useState(checkIsMetric(wUnits));
@@ -176,7 +181,6 @@ function App() {
 
     function unitChange(parameter:string, unit:string){
       setWUnits({...wUnits,[parameter]:unit})
-      console.log(parameter+" changed to "+ unit)
       savePrefUnits()
     }
 
@@ -189,8 +193,6 @@ function App() {
         wind_speed: "mph",
         precipitation: "inch"
       });
-      setIsImperial(true);
-      setIsMetric(false)
       savePrefUnits()
     }
 
@@ -200,18 +202,29 @@ function App() {
         temperature: "celsius",
         wind_speed: "km/h",
         precipitation: "mm"
-      });
-      setIsImperial(false);
-      setIsMetric(true);      
+      });  
       savePrefUnits()
     }
 
     function handleUnitChange(parameter:string, unit:string){
       unitChange(parameter,unit);
-      setIsImperial(checkIsImperial(wUnits));
-      setIsMetric(checkIsMetric(wUnits));
     }
 
+    async function handleSearchSelect(index:number){
+      setIsLoading(true)
+      setCoords(
+        {
+          latitude: searchResults[index].latitude,
+          longitude: searchResults[index].longitude
+        })
+      setSearch("");
+      setSearchResults([])
+    }
+
+    useEffect(()=>{
+      setIsImperial(checkIsImperial(wUnits));
+      setIsMetric(checkIsMetric(wUnits));
+    },[wUnits])
         
 
     useEffect(()=>{ //changing theme according to day or night at the initial load of the page
@@ -225,6 +238,32 @@ function App() {
     // useEffect(()=>{
     //   setLoc({latitude: coords?.latitude || 52.52,longitude: coords?.longitude || 13.41})
     // },[coords])
+
+    useEffect(()=>{
+      console.log("current hour: "+date.getHours())
+    },[date])
+    useEffect(()=>{ // updates search results
+      async function getResults(){
+        try{
+          const results = await searchLocation(search)
+          if(results){
+            console.log("search results: "+results[0].name)
+            setSearchResults(results);
+          }
+        }
+        catch(err){
+          console.error(err)
+        }
+        
+      }
+
+
+      if(search.length>1){
+        setSearchIsLoading(true)
+        getResults()
+        setSearchIsLoading(false)
+      }
+    },[search])
 
     useEffect(()=>{        // fetches current location of the user defaults to berlin if not fetched
       if(navigator.geolocation){
@@ -266,11 +305,19 @@ function App() {
       setShowDaysDropdown(false);
     }
 
+    useEffect(()=>{
+      if(weather!=null){
+        setIsLoading(true)
+        setDate(new Date(weather.current.time))
+        setIsLoading(false)
+      }
+    },[weather])
+
     useEffect(()=>{               //update hourly forecast if weather or forecast day changes
       if(weather!=null){
         getHourly(forecastDay);
       }
-    },[weather,forecastDay])
+    },[weather,forecastDay, date])
   
   // console.log(document.documentElement.getAttribute("data-theme"))
 
@@ -349,15 +396,24 @@ function App() {
           {/* <h1>{coords!=undefined ? `latitude: ${coords?.latitude} longitude: ${coords?.longitude}`: "location is not available"}</h1> */}
 
 
-          <div className='md:flex items-center justify-center md:mb-10'>
-            <label className=''>
-              <input type='search' value={search} onChange={e=>setSearch(e.target.value)} aria-label='search location'
-                className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
-              <img src={searchIcon} className='relative bottom-9.5 left-6' alt='search icon'/> 
-            </label>
-            <button className='bg-Blue-500 font-bri font-semibold text-lg light:bg-Neutral-0 light:text-black light:hover:bg-Neutral-200 rounded-xl px-7 py-3 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-Blue-500/70 ease-in'>
-              Search
-            </button>
+          <div className='md:flex items-center justify-center md:mb-10'>{/* search bar adn button*/}
+
+              <div className='relative'>
+
+                <input type='search' value={search} onChange={e=>setSearch(e.target.value)} aria-label='search location'
+                  className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] 
+                    w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
+
+                <img src={searchIcon} className='relative bottom-9.5 left-6' alt='search icon'/>
+
+                <SearchDropdown handleSearchSelect={handleSearchSelect} isLoading={searchIsLoading} show={searchIsLoading || search.length>1} resultList={searchResults} />
+
+              </div>
+
+              <button type='submit' className='bg-Blue-500 font-bri font-semibold text-lg light:bg-Neutral-0 light:text-black light:hover:bg-Neutral-200 rounded-xl px-7 py-3 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-Blue-500/70 ease-in'>
+                Search
+              </button>
+
           </div>
           <div className='my-grid gap-10 mx-auto lg:gap-3 xl:gap-10'>
 
@@ -405,7 +461,7 @@ function App() {
                 <div className='grid md:grid-cols-7 xl:grid-cols-7 lg:grid-cols-5 grid-cols-2 2xs:grid-cols-3 gap-3'>
                   {
                     weather.daily.time.map((time,index)=>
-                        <DailyStats key={time} dayName={days[(date.getDay()+index)%7]} min_temp={weather.daily.temperature_2m_min[index]} max_temp={weather.daily.temperature_2m_max[index]} w_code={WCodetoImg(weather.daily.weather_code[index])} />
+                        <DailyStats key={time} dayName={days[(date.getDay()+index)%7] || ""} min_temp={weather.daily.temperature_2m_min[index]} max_temp={weather.daily.temperature_2m_max[index]} w_code={WCodetoImg(weather.daily.weather_code[index])} />
                     )
                   }
                 </div>
@@ -423,7 +479,7 @@ function App() {
                     
                     <div className='flex gap-x-3 ps-4 pe-3 font-bri'>
                       {days[(date.getDay()+forecastDay)%7]}
-                      <img src={dropdown}/>
+                      <img src={dropdown} className={showDaysDropdown ? 'rotate-180' : ''}/>
                     </div>
 
                   </button>

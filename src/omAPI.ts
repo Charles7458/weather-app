@@ -140,8 +140,8 @@ export const defWeather: weather = {
     }
 }
 
-type locationSearchList = {
-    "results": Array<locationSearchResult>
+export type locationSearchList = {
+    results: Array<locationSearchResult>
 }
 
 export type units = {
