@@ -283,7 +283,7 @@ function App() {
             console.log("error while accessing location")
           },
           {//options
-            enableHighAccuracy:true, timeout:10000
+            enableHighAccuracy:true, timeout:3000
           }
       )
       }
