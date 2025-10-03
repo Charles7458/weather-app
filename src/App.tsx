@@ -13,7 +13,8 @@ import unitsIcon from './assets/images/icon-units.svg'
 
 import dropdown from './assets/images/icon-dropdown.svg';
 import searchIcon from './assets/images/icon-search.svg';
-// import bookmark from './assets/images/bookmark_24dp_D9D9D9_FILL0_wght400_GRAD0_opsz24.svg'
+// import searchBookmark from './assets/images/bookmark_30dp_D9D9D9_FILL0_wght400_GRAD0_opsz24.svg'
+import bookmark from './assets/images/bookmark_45dp_D9D9D9_FILL0_wght400_GRAD0_opsz24.svg'
 // import filledBookmark from './assets/images/bookmark_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
 // import bookmarks from './assets/images/bookmarks_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
 
@@ -44,6 +45,18 @@ const default_units =  {
 
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const months = ['January',"February",'March','April','May','June','July','August','September','October','November','December'];
+const metricUnits = {
+    temperature: "celsius",
+    wind_speed: "km/h",
+    precipitation: "mm"
+}
+
+const imperialUnits = 
+{
+    temperature: "fahrenheit",
+    wind_speed: "mph",
+    precipitation: "inch"
+}
 
 function App() {
   
@@ -72,21 +85,35 @@ function App() {
         }
       })
 
-    const [savedLocations, setSavedLocations] = useState<Array<number>>(
-      ()=>{
-        try{
-          const locations = localStorage.getItem("saved_locations");
-          return locations ? JSON.parse(locations) : [];
-        }
+    // const [savedLocations, setSavedLocations] = useState<Array<number>>(
+    //   ()=>{
+    //     try{
+    //       const locations = localStorage.getItem("saved_locations");
+    //       return locations ? JSON.parse(locations) : [];
+    //     }
 
-        catch{
-          console.log("error accessing saved locations")
-          return [];
-        }
-      }
-    )
+    //     catch{
+    //       console.log("error accessing saved locations")
+    //       return [];
+    //     }
+    //   }
+    // )
+
+    // const [recentSearch, setRecentSearch] = useState<Array<number>>(
+    //   ()=>{
+    //     try{
+    //       const locations = localStorage.getItem("recent_search");
+    //       return locations ? JSON.parse(locations) : [];
+    //     }
+
+    //     catch{
+    //       console.log("error accessing saved locations")
+    //       return [];
+    //     }
+    //   }
+    // )
     
-    const [isSaved, setIsSaved] = useState(true);
+    // const [isSaved, setIsSaved] = useState(false);
     const [search, setSearch] = useState("");
     const [searchResults,setSearchResults] = useState<Array<locationSearchResult>>([])
     const [searchIsLoading, setSearchIsLoading] = useState(false);
@@ -155,40 +182,34 @@ function App() {
     }
 
     //saves preferred units in local storage
-    function savePrefUnits(){
-      localStorage.setItem("w_units",JSON.stringify(wUnits))
+    function savePrefUnits(units:units){
+      localStorage.setItem("w_units",JSON.stringify(units))
+      console.log("new units saved:");
+      const saved = localStorage.getItem("w_units");
+      saved ? console.log(JSON.parse(saved)): console.log("no units saved");
     }
 
     //saves saved location ids in local storage
-    function saveLocations(){
-      localStorage.setItem("saved_locations",JSON.stringify(savedLocations))
-    }
+    // function saveLocations(){
+    //   localStorage.setItem("saved_locations",JSON.stringify(savedLocations))
+    // }
 
     function unitChange(parameter:string, unit:string){
-      setWUnits({...wUnits,[parameter]:unit})
-      savePrefUnits()
+      const newUnits = {...wUnits,[parameter]:unit}
+      setWUnits(newUnits)
+      savePrefUnits(newUnits)
     }
 
 
 
     function handleSetImperial(){
-      setWUnits(
-      {
-        temperature: "fahrenheit",
-        wind_speed: "mph",
-        precipitation: "inch"
-      });
-      savePrefUnits()
+      setWUnits(imperialUnits);  
+      savePrefUnits(imperialUnits)
     }
 
     function handleSetMetric(){
-      setWUnits(
-      {
-        temperature: "celsius",
-        wind_speed: "km/h",
-        precipitation: "mm"
-      });  
-      savePrefUnits()
+      setWUnits(metricUnits);  
+      savePrefUnits(metricUnits)
     }
 
     function handleUnitChange(parameter:string, unit:string){
@@ -290,8 +311,6 @@ function App() {
 
     useEffect(()=>{        // fetches current location and weather at initial load of page
       fetchLocation()
-      getCity();
-      getAllWeather();
     },[])
 
     useEffect(()=>{ //getting weather and city at initial load and when dependencies change
@@ -319,7 +338,7 @@ function App() {
           setIsLoading(false)
         },500)   
       }
-    },[weather,forecastDay, date])
+    },[weather,forecastDay,hour, date])
   
   // console.log(document.documentElement.getAttribute("data-theme"))
     function closeAllDropdowns(){
@@ -426,8 +445,11 @@ function App() {
             <div> {/*div wrapping today div and feels like,preceptitation etc.*/}
 
               <div className='md:grid md:grid-cols-2 today-bg rounded-xl justify-self-end justify-between md:items-center lg:items-center xl:items-center xl:w-[90%] md:ps-10  lg:ps-5 xl:ps-10 w-fit pt-0.5'> {/* today bg div*/}
-
+                  
                   <div className='md:block hidden'>{/*city div (big screens)*/}
+                    <button className='p-1 hover:bg-Neutral-300/30 relative bottom-10 rounded cursor-pointer' >
+                    <img src={bookmark} className='' alt='save location icon' title='save'/>
+                    </button>
                     <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
                     <p className='text-gray-300/60 text-lg'>{dateString}</p>
                   </div>
