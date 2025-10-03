@@ -13,9 +13,9 @@ import unitsIcon from './assets/images/icon-units.svg'
 
 import dropdown from './assets/images/icon-dropdown.svg';
 import searchIcon from './assets/images/icon-search.svg';
-import bookmark from './assets/images/bookmark_24dp_FFFF55_FILL0_wght400_GRAD0_opsz24.svg'
-import filledBookmark from './assets/images/bookmark_24dp_FFFF55_FILL1_wght400_GRAD0_opsz24.svg'
-import bookmarks from './assets/images/bookmarks_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
+// import bookmark from './assets/images/bookmark_24dp_FFFF55_FILL0_wght400_GRAD0_opsz24.svg'
+// import filledBookmark from './assets/images/bookmark_24dp_FFFF55_FILL1_wght400_GRAD0_opsz24.svg'
+// import bookmarks from './assets/images/bookmarks_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
 
 import drizzle from './assets/images/icon-drizzle.webp';
 import fog from './assets/images/icon-fog.webp';
