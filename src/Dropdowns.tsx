@@ -92,7 +92,7 @@ export function SearchDropdown(fn:{show:boolean,isLoading:boolean, resultList:Ar
 
     else if (fn.show && fn.resultList.length==0){
         return(
-            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full md:w-[60vw] lg:w-[40vw] px-2 absolute z-10">
+            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full md:w-[60vw] lg:w-[40vw] px-4 py-4 absolute z-10">
                 No results found
             </div>
         )

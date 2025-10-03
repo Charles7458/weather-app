@@ -13,8 +13,8 @@ import unitsIcon from './assets/images/icon-units.svg'
 
 import dropdown from './assets/images/icon-dropdown.svg';
 import searchIcon from './assets/images/icon-search.svg';
-// import bookmark from './assets/images/bookmark_24dp_FFFF55_FILL0_wght400_GRAD0_opsz24.svg'
-// import filledBookmark from './assets/images/bookmark_24dp_FFFF55_FILL1_wght400_GRAD0_opsz24.svg'
+// import bookmark from './assets/images/bookmark_24dp_D9D9D9_FILL0_wght400_GRAD0_opsz24.svg'
+// import filledBookmark from './assets/images/bookmark_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
 // import bookmarks from './assets/images/bookmarks_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
 
 import drizzle from './assets/images/icon-drizzle.webp';
@@ -53,6 +53,7 @@ function App() {
     const [coords, setCoords] = useState<{ latitude: number; longitude: number }>({ latitude: 52.52, longitude: 13.41 });
     const [cityString, setCityString] = useState("")
     const [weather, setWeather] = useState(defWeather);
+    let currentLocationId = 0;
 
     const [date, setDate] = useState(new Date());
     const day = days[date.getDay()];
@@ -70,7 +71,22 @@ function App() {
           return default_units;
         }
       })
-          
+
+    const [savedLocations, setSavedLocations] = useState<Array<number>>(
+      ()=>{
+        try{
+          const locations = localStorage.getItem("saved_locations");
+          return locations ? JSON.parse(locations) : [];
+        }
+
+        catch{
+          console.log("error accessing saved locations")
+          return [];
+        }
+      }
+    )
+    
+    const [isSaved, setIsSaved] = useState(true);
     const [search, setSearch] = useState("");
     const [searchResults,setSearchResults] = useState<Array<locationSearchResult>>([])
     const [searchIsLoading, setSearchIsLoading] = useState(false);
@@ -91,10 +107,10 @@ function App() {
         const currWeather = await getWeather(coords.latitude, coords.longitude, wUnits || default_units);
         if(currWeather===null){
           setIsError(true);
+          console.log("fetching weather failed!")
           return;
         }
         setWeather(currWeather || defWeather);
-        // getHourly(0)
         console.log(currWeather)
         console.log(coords.latitude, coords.longitude)
     }
@@ -104,6 +120,8 @@ function App() {
         const location: cityNameResult = res.data;
         if(res.status!=200){setIsError(true)}
         const country = location.countryName.replace("(the)","")//replaces '(the)' which sometimes pops up in country name
+        
+        currentLocationId
         setCityString(`${location.city}, ${country}`)
     }
 
@@ -136,8 +154,14 @@ function App() {
       setHourly(newHourlyData);
     }
 
+    //saves preferred units in local storage
     function savePrefUnits(){
       localStorage.setItem("w_units",JSON.stringify(wUnits))
+    }
+
+    //saves saved location ids in local storage
+    function saveLocations(){
+      localStorage.setItem("saved_locations",JSON.stringify(savedLocations))
     }
 
     function unitChange(parameter:string, unit:string){
@@ -190,21 +214,19 @@ function App() {
 
     useEffect(()=>{ //changing theme according to day or night at the initial load of the page
       var doc = document.documentElement;
-      if(hour>6 && hour<14){
+      if(hour>6 && hour<17){
         doc.setAttribute("data-theme","light")
       }
       else{doc.setAttribute("data-theme","dark")}
     },[])
 
-    // useEffect(()=>{
-    //   setLoc({latitude: coords?.latitude || 52.52,longitude: coords?.longitude || 13.41})
-    // },[coords])
+
 
     useEffect(()=>{
       console.log("current hour: "+date.getHours())
     },[date])
 
-    useEffect(()=>{ // updates search results
+    useEffect(()=>{  // updates search results when there is a change in search bar
       async function getResults(){
         try{
           setTimeout(async ()=>{
@@ -212,8 +234,9 @@ function App() {
             if(results){
               console.log("search results: "+results[0].name)
               setSearchResults(results);
-              setSearchIsLoading(false)
+
             }
+            setSearchIsLoading(false)
           },300)
         }
         catch(err){
@@ -224,12 +247,13 @@ function App() {
       }
 
       if(search.length>1){
+        setSearchResults([])
         setSearchIsLoading(true)
         getResults()
       }
     },[search])
 
-    useEffect(()=>{        // fetches current location of the user defaults to berlin if not fetched
+    function fetchLocation(){ // fetches current location of the user defaults to berlin if not fetched
       if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -249,6 +273,7 @@ function App() {
               console.log("The request to get location timed out.");
             } else {
               console.log("An unknown error occurred.", error);
+              setIsError(true)
             }
             setIsLocPending(false)
           },
@@ -261,6 +286,12 @@ function App() {
         console.log("Geolocation is not supported by this browser.")
         setIsLocPending(false)
       }
+    }
+
+    useEffect(()=>{        // fetches current location and weather at initial load of page
+      fetchLocation()
+      getCity();
+      getAllWeather();
     },[])
 
     useEffect(()=>{ //getting weather and city at initial load and when dependencies change
@@ -269,17 +300,14 @@ function App() {
         getCity();
         getAllWeather();
       } 
-    },[isLocPending, coords, hour, wUnits])
-
-    function closeAllDropdowns(){
-      setShowUnitsDropdown(false);
-      setShowDaysDropdown(false);
-    }
+    },[coords, hour, wUnits])
 
     useEffect(()=>{
       if(weather!=null){
-        setIsLoading(true)
         setDate(new Date(weather.current.time))
+        if(!isLoading){
+          setIsError(false)
+        }
       }
     },[weather])
 
@@ -294,6 +322,11 @@ function App() {
     },[weather,forecastDay, date])
   
   // console.log(document.documentElement.getAttribute("data-theme"))
+    function closeAllDropdowns(){
+      setShowUnitsDropdown(false);
+      setShowDaysDropdown(false);
+    }
+
 
   if(isLoading){ {/* Loading Screen*/}
     return(
@@ -325,8 +358,9 @@ function App() {
               </p>
               <p className=' text-gray-400'>We couldn't connect to the server (API error)</p>
               <p className=' text-gray-400'>Please try again in a few moments</p>
-              <button className='md:h-10 h-8 bg-gray-600/30 rounded-lg py-1 mt-8 hover:cursor-pointer
-                  hover:bg-gray-600/50 text-gray-400 font-semibold hover:text-white'> {/*Units button*/}
+              {/*Retry button*/}
+              <button className='md:h-10 h-8 bg-gray-600/30 rounded-lg py-1 mt-8 hover:cursor-pointer 
+                  hover:bg-gray-600/50 text-gray-400 font-semibold hover:text-white' onClick={fetchLocation}> 
               <div className='flex px-4 align-middle'>
                 <img src={retryIcon} className='pe-3 h-5 pt-1'/>
                   Retry           
