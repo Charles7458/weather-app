@@ -327,8 +327,8 @@ function App() {
               console.log("An unknown error occurred.", error);
               setIsError(true)
             }
+            setCoords({ latitude: 52.52, longitude: 13.41 })
             setIsLocPending(false)
-            setIsLoading(false)
           },
           {//options
             enableHighAccuracy:true, timeout:5000
