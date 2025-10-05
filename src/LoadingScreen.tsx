@@ -43,15 +43,15 @@ export function LoadingScreen(){
 
           <div className="flex mx-2 md:mx-[5vw] justify-between">
 
-            <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
+            <img src={logo} className='md:w-fit w-[40vw]' alt='logo'/> {/* logo*/}
 
             <div className='relative'>
               <button className='md:h-10 h-8 bg-Neutral-700 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-Neutral-600'
                 > {/*Units button*/}
                 <div className='flex gap-x-3 px-3'>
-                  <img src={unitsIcon} />
+                  <img src={unitsIcon} alt='units' />
                   Units
-                  <img src={dropdown}/>
+                  <img src={dropdown} alt='dropdown'/>
                 </div>
               </button>
 
@@ -61,7 +61,7 @@ export function LoadingScreen(){
           </div>
 
 
-          <p className='text-6xl  font-bri mx-[6vw] md:mx-0 my-16 text-center leading-18'>How's the sky looking today?</p>
+          <h1 className='text-6xl  font-bri mx-[6vw] md:mx-0 my-16 text-center leading-18'>How's the sky looking today?</h1>
 
           <div className='md:flex items-center justify-center md:mb-10'>{/* search bar and button*/}
 
@@ -124,7 +124,7 @@ export function LoadingScreen(){
                     
                     <div className='flex gap-x-3 ps-4 pe-3 font-bri'>
                         -
-                      <img src={dropdown}/>
+                      <img src={dropdown} alt='dropdown'/>
                     </div>
 
                   </button>

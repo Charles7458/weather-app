@@ -457,25 +457,25 @@ function App() {
 
             <button className='md:h-10 h-8 bg-Neutral-800 rounded-lg py-1 hover:cursor-pointer hover:bg-Neutral-700'> {/*Units button*/}
               <div className='flex gap-x-3 px-3'>
-                <img src={unitsIcon} />
+                <img src={unitsIcon} alt='units'/>
                 Units
-                <img src={dropdown}/>
+                <img src={dropdown} alt='dropdown'/>
               </div>
             </button>
           </div>
 
           <div className='text-center justify-center mt-20'>
               <img src={errorIcon} className='block mx-auto w-16' alt="error icon"/>
-              <p className='my-5 font-bold text-3xl'>
+              <h1 className='my-5 font-bold text-3xl'>
                 Something Went Wrong
-              </p>
+              </h1>
               <p className=' text-gray-400'>We couldn't connect to the server (API error)</p>
               <p className=' text-gray-400'>Please try again in a few moments</p>
               {/*Retry button*/}
               <button className='md:h-10 h-8 bg-gray-600/30 rounded-lg py-1 mt-8 hover:cursor-pointer 
                   hover:bg-gray-600/50 text-gray-400 font-semibold hover:text-white' onClick={fetchLocation}> 
               <div className='flex px-4 align-middle'>
-                <img src={retryIcon} className='pe-3 h-5 pt-1'/>
+                <img src={retryIcon} className='pe-3 h-5 pt-1' alt='retry'/>
                   Retry           
               </div>
             </button>
@@ -492,15 +492,15 @@ function App() {
 
           <div className="flex mx-2 md:mx-[5vw] justify-between">
 
-            <img src={logo} className='md:w-fit w-[40vw]'/> {/* logo*/}
+            <img src={logo} className='md:w-fit w-[40vw]' alt='logo'/> {/* logo*/}
 
             <div className='relative'>
               <button className='md:h-10 h-8 bg-Neutral-700 font-semibold rounded-lg py-1 hover:cursor-pointer hover:bg-Neutral-600'
                 onClick={e=>{e.stopPropagation();setShowUnitsDropdown(!showUnitsDropdown)}}> {/*Units button*/}
                 <div className='flex gap-x-3 px-3'>
-                  <img src={unitsIcon} />
+                  <img src={unitsIcon} alt='units'/>
                   Units
-                  <img src={dropdown} className={showUnitsDropdown? "rotate-180":""}/>
+                  <img src={dropdown} className={showUnitsDropdown? "rotate-180":""} alt='dropdown'/>
                 </div>
               </button>
 
@@ -511,7 +511,7 @@ function App() {
           </div>
 
 
-          <p className='text-6xl  font-bri mx-[6vw] md:mx-0 my-16 text-center leading-18'>How's the sky looking today?</p>
+          <h1 className='text-6xl  font-bri mx-[6vw] md:mx-0 my-16 text-center leading-18'>How's the sky looking today?</h1>
 
 
           <div className='md:flex items-center align-middle justify-center md:mb-10 md:gap-x-5 gap-x-10'>{/* bookmarks, search bar and button*/}
@@ -523,7 +523,7 @@ function App() {
             <div className='relative'>
                 <button className=' hover:bg-Neutral-200/20 rounded-lg p-4 cursor-pointer' 
                   onClick={e=>{e.stopPropagation();setShowSaved(!showSaved)}}>
-                  <img src={bookmarks}/>
+                  <img src={bookmarks} alt='saved'/>
                 </button>
                 <SavedDropdown show={showSaved} handleSelect={handleSavedSelect}  savedList={savedLocations} handleRemoveSave={handleRemoveSave}/>
             </div>
@@ -637,7 +637,7 @@ function App() {
                     
                     <div className='flex gap-x-3 ps-4 pe-3 font-bri'>
                       {days[(date.getDay()+forecastDay)%7]}
-                      <img src={dropdown} className={showDaysDropdown ? 'rotate-180' : ''}/>
+                      <img alt='dropdown' src={dropdown} className={showDaysDropdown ? 'rotate-180' : ''}/>
                     </div>
 
                   </button>

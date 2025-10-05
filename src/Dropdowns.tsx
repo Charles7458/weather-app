@@ -22,7 +22,7 @@ function UnitOptions(fn:{text:string, parameter:string, unit:string, selected:bo
         <div className={fn.selected ? "rounded-lg bg-Neutral-700 text-Neutral-0 flex justify-between px-2 py-2 my-1":"py-2 px-2 my-1 text-Neutral-0 rounded-lg hover:bg-Neutral-700"}
             onClick={e=>{e.stopPropagation();fn.handleChange(fn.parameter,fn.unit)}}>
             {fn.text}
-            {fn.selected && <img src={checkmark}></img>}
+            {fn.selected && <img src={checkmark} alt="checkmark"></img>}
         </div>
     )
 }
@@ -93,7 +93,7 @@ function SearchOptions(fn:{country_code:string,id:number,placeName:string, handl
                 {
                     fn.isSaved ? 
                     <img src={searchFilledBookmark} alt='remove saved location icon' title='Remove from saved'/> :
-                    <img src={searchBookmark} className='' alt='save location icon' title='save'/>
+                    <img src={searchBookmark}  alt='save location icon' title='save'/>
         
                 }
             </button>
@@ -126,7 +126,7 @@ export function SearchDropdown(fn:{show:boolean, close:()=>void, isLoading:boole
     else if(fn.show && fn.isLoading){
         return(
             <div className="flex rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full mt-5 md:w-[60vw] lg:w-[40vw] px-5 py-3 absolute z-10">
-                <img src={loading} className="rotation me-5 w-6"/>
+                <img alt="loading" src={loading} className="rotation me-5 w-6"/>
                 Search in progress
             </div>
         )
@@ -172,7 +172,7 @@ function SavedOptions(fn:{loc:saveLocation, handleSelect:()=>void, handleRemoveS
             <CircleFlag countryCode={fn.loc.country_code.toLowerCase()} width="30px"/>
             <p className="ms-1 me-8 ">{fn.loc.name}</p>
             <button className="hover:bg-Neutral-300/50 rounded p-2 cursor-pointer" onClick={e=>{e.stopPropagation();fn.handleRemoveSave()}}>
-                <img src={deleteIcon} />
+                <img src={deleteIcon} alt="delete"/>
             </button>
         </div>
     )
