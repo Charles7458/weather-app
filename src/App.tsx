@@ -328,6 +328,7 @@ function App() {
               setIsError(true)
             }
             setIsLocPending(false)
+            setIsLoading(false)
           },
           {//options
             enableHighAccuracy:true, timeout:5000
