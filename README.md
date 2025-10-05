@@ -63,8 +63,9 @@ Users should be able to:
 
 ### What I learned
 
-- I learned how to use navigator.geolocation to get the user's current location
-- I learnt to use @layer, @theme, @custom-variant attributes of TailwindCSS
+- I learned how to use navigator.geolocation to get the user's current location.
+- I learnt to use @layer, @theme, @custom-variant attributes of TailwindCSS.
+- I learnt how to implement keyboard navigation using key down event listener.
 
 ### Continued development
 

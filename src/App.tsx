@@ -517,15 +517,6 @@ function App() {
 
           <div className={isCurrLocDispLoc ? 'flex justify-between md:justify-end w-full md:w-35 md:px-0 md:ms-[-150px]': 
               'flex justify-between md:justify-between w-full md:w-35 md:px-0 md:ms-[-150px]'}>
-          {/* current location button */}
-            {
-             !isCurrLocDispLoc &&
-
-              <button className='hover:bg-Neutral-200/20 rounded-lg  p-4 cursor-pointer' 
-                onClick={e=>{e.stopPropagation();fetchLocation()}} title='current location'>
-                <img src={locationIcon}  alt='go to current location'/>
-              </button>
-          }
 
             {/* bookmarks button and dropdown */}
             <div className='relative'>
@@ -535,6 +526,16 @@ function App() {
                 </button>
                 <SavedDropdown show={showSaved} handleSelect={handleSavedSelect}  savedList={savedLocations} handleRemoveSave={handleRemoveSave}/>
             </div>
+            
+            {/* current location button */}
+            {
+             !isCurrLocDispLoc &&
+
+              <button className='hover:bg-Neutral-200/20 rounded-lg  p-4 cursor-pointer' 
+                onClick={e=>{e.stopPropagation();fetchLocation()}} title='current location'>
+                <img src={locationIcon}  alt='go to current location'/>
+              </button>
+          }
 
           </div>
           
