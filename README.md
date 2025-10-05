@@ -42,7 +42,7 @@ Users should be able to:
 
 ### Links
 
-- Solution URL: [Add solution URL here](https://your-solution-url.com)
+- Solution URL: (https://www.frontendmentor.io/solutions/responsive-interactive-weather-app--y1aOJFivx)
 - Live Site URL: (https://weather-app-ccharles8547-gmailcoms-projects.vercel.app/)
 
 ## Extra Features
