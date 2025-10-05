@@ -1,6 +1,6 @@
 import { useEffect, useState} from 'react'
 import axios from 'axios';
-import { checkIsImperial, checkIsMetric, defWeather, getWeather, searchLocation} from './omAPI';//setUnits, searchLocation
+import { checkIsImperial, checkIsMetric, defWeather, getWeather, searchLocation} from './omAPI';
 import type {cityNameResult, locationSearchResult}  from './omAPI';
 import './App.css';
 import { DaysDropdown, SavedDropdown, SearchDropdown, UnitsDropdown } from './Dropdowns';
@@ -512,7 +512,6 @@ function App() {
 
 
           <p className='text-6xl  font-bri mx-[6vw] md:mx-0 my-16 text-center leading-18'>How's the sky looking today?</p>
-          {/* <h1>{coords!=undefined ? `latitude: ${coords?.latitude} longitude: ${coords?.longitude}`: "location is not available"}</h1> */}
 
 
           <div className='md:flex items-center align-middle justify-center md:mb-10 md:gap-x-5 gap-x-10'>{/* bookmarks, search bar and button*/}
