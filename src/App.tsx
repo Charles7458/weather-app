@@ -145,33 +145,39 @@ function App() {
     
     
     async function getAllWeather() { // function that gets the forecast
-        const currWeather = await getWeather(coords.latitude, coords.longitude, wUnits || default_units);
+        const currWeather = await getWeather(coords.latitude, coords.longitude, wUnits || default_units)
+        .catch(err=>{console.error(err);setIsError(true);return});
         if(currWeather===null){
           setIsError(true);
           console.log("fetching weather failed!")
           return;
         }
-        setWeather(currWeather || defWeather);
-        console.log(currWeather)
-        console.log(coords.latitude, coords.longitude)
+        else{
+          setWeather(currWeather || defWeather);
+          console.log(currWeather)
+          console.log(coords.latitude, coords.longitude)
+        }
     }
 
     async function getCity(){
         const res = await axios.get(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}&localityLanguage=en`)
-        const location: cityNameResult = res.data;
-        if(res.status!=200){setIsError(true); console.log("fetching city name failed!"); return;}
-        const country = location.countryName.replace("(the)","")//replaces '(the)' which sometimes pops up in country name
-        //sets current location id which used for saving the location
-          setDisplayedLocation(
-            {
-              coords: {lat: location.latitude, lon: location.longitude},
-              name: location.city,
-              country_code: location.countryCode
-            });
-          console.log("current location changed: "+displayedLocation)
-        setIsCurrLocDispLoc(displayedLocation.coords.lat==currentLocation.lat && displayedLocation.coords.lon==currentLocation.lon)
-        setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
-        setCityString(`${location.city}, ${country}`)
+        .catch(err=>{console.error(err);setIsError(true)})
+        if(res){
+            const location: cityNameResult = res.data;
+            if(res.status!=200){setIsError(true); console.log("fetching city name failed!"); return;}
+            const country = location.countryName.replace("(the)","")//replaces '(the)' which sometimes pops up in country name
+            //sets current location id which used for saving the location
+              setDisplayedLocation(
+                {
+                  coords: {lat: location.latitude, lon: location.longitude},
+                  name: location.city,
+                  country_code: location.countryCode
+                });
+              console.log("current location changed: "+displayedLocation)
+            setIsCurrLocDispLoc(displayedLocation.coords.lat==currentLocation.lat && displayedLocation.coords.lon==currentLocation.lon)
+            setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
+            setCityString(`${location.city}, ${country}`)
+        }
     }
 
     function getHourly(theDay:number) {
@@ -409,6 +415,7 @@ function App() {
         try{
           setTimeout(async ()=>{
             const results = await searchLocation(search)
+            .catch(err=>{ console.error(err);setSearchIsLoading(false);alert("search failed");return;})
             if(results){
               console.log("search results: "+results[0].name)
               setSearchResults(results);
@@ -420,6 +427,7 @@ function App() {
         catch(err){
           console.error(err)
           setSearchIsLoading(false)
+          alert("search failed")
         }
         
       }
@@ -668,113 +676,84 @@ function App() {
             </div>
 
           </div>
+          <p className='text-center text-Neutral-300 mt-10 mb-3'>Made with ❤️ by
+              <a href='https://github.com/Charles7458' target='_blank' className='underline ps-2'>Charles</a>
+          </p>
         </div>
       )
     }
 
-    function WCodetoImg(code:number){ // function to translate weather code
-
-      const CodeMap: { [key: number]: string } = {
-          0 : sunny,
-          1 : sunny,
-          2 : partlyCloudy,
-          3 : overcast,
-          45 : fog,
-          48 : fog,
-          51 : drizzle,
-          53 : drizzle,
-          55 : drizzle,
-          56 : drizzle,
-          57 : drizzle,
-          61 : rain,   
-          63 : rain,     
-          65 : rain,  
-          66 : rain,
-          67 : rain,
-          71 : snow,   
-          73 : snow,     
-          75 : snow,  
-          77 : snow,   
-          80 : rain,         
-          81 : rain,
-          82 : rain,          
-          85 : snow,
-          86 : snow,          
-          95 :storm,
-          96 :storm,          
-          99 :storm,       
-        }
-
-        return CodeMap[code]
-        // if([0,1].includes(code))
-        //   return sunny;
-        // else if(code==2)
-        //   return partlyCloudy;
-        // else if(code==3)
-        //   return overcast;
-        // else if([45,48].includes(code))
-        //   return fog;
-        // else if([51,53,55,56,57].includes(code))
-        //   return drizzle;
-        // else if([61,63,65,66,67, 80,81,82].includes(code))
-        //   return rain;
-        // else if([71, 73, 75, 77, 85, 86].includes(code))
-        //   return snow;
-        // else if([95,96,99].includes(code))
-        //   return storm;
-      }
-
-      function WCodetoText(code:number){ // function to translate weather code
-
-        const CodeMap: { [key: number]: string } = {
-          0 : "sunny",
-          1 : "mainly clear",
-          2 : "partly cloudy",
-          3 : "overcast",
-          45 : "fog",
-          48 : "depositing rime fog",
-          51 : "light drizzle",
-          53 : "moderate drizzle",          
-          55 : "dense drizzle",
-          56 : "light freezing drizzle",
-          57 : "dense freezing drizzle",
-          61 : "slight rain",
-          63 : "moderate rain",
-          65 : "heavy rain",
-          66 : "light freezing rain",
-          67 : "heavy freezing rain",
-          71 : "slight snow",
-          73 : "moderate snow",
-          75 : "heavy snow",
-          77 : "snow grains",
-          80 : "slight rain showers",
-          81 : "moderate rain showers",
-          82 : "violent rain showers",
-          85 : "slight snow showers",
-          86 : "heavy snow showers",
-          95 : "thunderstorm",
-          96 : "thunderstorm w/ slight hail",
-          99 : "thunderstorm w/ heavy hail"
-        }
-        // if([0,1].includes(code))
-        //   return "sunny";
-        // else if(code==2)
-        //   return "partly cloudy";
-        // else if(code==3)
-        //   return "overcast";
-        // else if([45,48].includes(code))
-        //   return "fog";
-        // else if([51,53,55,56,57].includes(code))
-        //   return "drizzle";
-        // else if([61,63,65,66,67, 80,81,82].includes(code))
-        //   return "rain";
-        // else if([71, 73, 75, 77, 85, 86].includes(code))
-        //   return "snow";
-        // else if([95,96,99].includes(code))
-        //   return "storm";
-        return CodeMap[code];
-      }
 }
+
+function WCodetoImg(code:number){ // function to translate weather code
+
+    const CodeMap: { [key: number]: string } = {
+        0 : sunny,
+        1 : sunny,
+        2 : partlyCloudy,
+        3 : overcast,
+        45 : fog,
+        48 : fog,
+        51 : drizzle,
+        53 : drizzle,
+        55 : drizzle,
+        56 : drizzle,
+        57 : drizzle,
+        61 : rain,   
+        63 : rain,     
+        65 : rain,  
+        66 : rain,
+        67 : rain,
+        71 : snow,   
+        73 : snow,     
+        75 : snow,  
+        77 : snow,   
+        80 : rain,         
+        81 : rain,
+        82 : rain,          
+        85 : snow,
+        86 : snow,          
+        95 :storm,
+        96 :storm,          
+        99 :storm,       
+      }
+      return CodeMap[code]
+    }
+
+function WCodetoText(code:number){ // function to translate weather code
+
+    const CodeMap: { [key: number]: string } = {
+      0 : "sunny",
+      1 : "mainly clear",
+      2 : "partly cloudy",
+      3 : "overcast",
+      45 : "fog",
+      48 : "depositing rime fog",
+      51 : "light drizzle",
+      53 : "moderate drizzle",          
+      55 : "dense drizzle",
+      56 : "light freezing drizzle",
+      57 : "dense freezing drizzle",
+      61 : "slight rain",
+      63 : "moderate rain",
+      65 : "heavy rain",
+      66 : "light freezing rain",
+      67 : "heavy freezing rain",
+      71 : "slight snow",
+      73 : "moderate snow",
+      75 : "heavy snow",
+      77 : "snow grains",
+      80 : "slight rain showers",
+      81 : "moderate rain showers",
+      82 : "violent rain showers",
+      85 : "slight snow showers",
+      86 : "heavy snow showers",
+      95 : "thunderstorm",
+      96 : "thunderstorm w/ slight hail",
+      99 : "thunderstorm w/ heavy hail"
+    }
+    return CodeMap[code];
+  }
 
 
 export default App
