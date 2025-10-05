@@ -50,12 +50,12 @@ html,body
 }
 
 @layer components {
-    .forecast-scrollbar::-webkit-scrollbar{
+    .custom-scroll::-webkit-scrollbar{
         width: 5px;
         height: 10px;
         margin-right: 10px;
     }
-    .forecast-scrollbar::-webkit-scrollbar-thumb{
+    .custom-scroll::-webkit-scrollbar-thumb{
         background-color: var(--Neutral-700);
         border: 1px solid var(--Neutral-600);
     }
@@ -131,6 +131,10 @@ html,body
         justify-content: center;
         align-items: center;
     }
+    .today-bg{
+        height: 280px;
+        background-size: cover;
+    }
 }
 
 @media (max-width:427px){
@@ -139,7 +143,7 @@ html,body
         height: 320px;
         width: 100%;
         background-repeat: no-repeat;
-        background-size: contain;
+        background-size: cover;
     }
 
 }

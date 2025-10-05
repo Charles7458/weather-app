@@ -188,7 +188,7 @@ export async function getWeather(lat: number|undefined, long: number|undefined, 
 }
 
 export async function searchLocation(name: string): Promise<Array<locationSearchResult> | null> {
-      const location = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=5&language=en&format=json`);
+      const location = await axios.get(`https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=10&language=en&format=json`);
       const locationList: locationSearchList = location.data;
       return locationList.results;
 }     

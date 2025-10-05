@@ -1,3 +1,8 @@
+import bookmark from './assets/images/bookmark_40dp_D9D9D9_FILL0_wght400_GRAD0_opsz40.svg'
+import filledBookmark from './assets/images/bookmark_40dp_D9D9D9_FILL1_wght400_GRAD0_opsz40.svg'
+import smallBookmark from './assets/images/bookmark_35dp_D9D9D9_FILL0_wght400_GRAD0_opsz40.svg'
+import smallFilledBookmark from './assets/images/bookmark_35dp_D9D9D9_FILL1_wght400_GRAD0_opsz40.svg'
+
 // The component for divs in Hourly Forecast
 export function HourlyDiv(hr:{img:string, w_name:string, hour:string, temperature:number}) {
 
@@ -44,5 +49,33 @@ export function DailyStats(fn:{dayName:string, w_code:string, w_text:string, min
         <span className='text-Neutral-300'>{fn.min_temp}&deg;</span>
       </div>
     </div>
+  )
+}
+
+export function SaveButton(fn:{handleSaveLocation:()=>void, isSaved:boolean, handleRemoveSave:()=>void}){
+  
+  return(
+    <button className='p-1 hover:bg-Neutral-300/30 rounded cursor-pointer w-fit
+      ms-[-20px] lg:ms-[-10px] xl:ms-[-20px]'  onClick={e=>{e.stopPropagation();fn.isSaved ? fn.handleRemoveSave() : fn.handleSaveLocation() }}>
+      {
+        fn.isSaved ? 
+        <img src={filledBookmark} alt='remove saved location icon' title='Remove from saved'/> :
+        <img src={bookmark} className='' alt='save location icon' title='save'/>
+        
+      }
+    </button>
+  )
+}
+
+export function SmallSaveButton(fn:{handleSaveLocation:()=>void, isSaved:boolean, handleRemoveSave:()=>void}){
+  return(
+  <button className='p-3 hover:bg-Neutral-300/30 rounded cursor-pointer ms' onClick={e=>{e.stopPropagation();fn.isSaved ? fn.handleRemoveSave()  : fn.handleSaveLocation() }}>
+    {
+        fn.isSaved ? 
+        <img src={smallFilledBookmark} alt='remove saved location icon' title='Remove from saved'/> :
+        <img src={smallBookmark} className='' alt='save location icon' title='save'/>
+        
+      }
+  </button>
   )
 }

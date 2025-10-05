@@ -3,21 +3,21 @@ import axios from 'axios';
 import { checkIsImperial, checkIsMetric, defWeather, getWeather, searchLocation} from './omAPI';//setUnits, searchLocation
 import type {cityNameResult, locationSearchResult}  from './omAPI';
 import './App.css';
-import { DaysDropdown, SearchDropdown, UnitsDropdown } from './Dropdowns';
+import { DaysDropdown, SavedDropdown, SearchDropdown, UnitsDropdown } from './Dropdowns';
 
 import logo from './assets/images/logo.svg';
 import errorIcon from './assets/images/icon-error.svg';
 import retryIcon from './assets/images/icon-retry.png';
 import type { units } from './omAPI';
+
+//icon assets
 import unitsIcon from './assets/images/icon-units.svg'
 
 import dropdown from './assets/images/icon-dropdown.svg';
 import searchIcon from './assets/images/icon-search.svg';
-// import searchBookmark from './assets/images/bookmark_30dp_D9D9D9_FILL0_wght400_GRAD0_opsz24.svg'
-import bookmark from './assets/images/bookmark_45dp_D9D9D9_FILL0_wght400_GRAD0_opsz24.svg'
-// import filledBookmark from './assets/images/bookmark_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
-// import bookmarks from './assets/images/bookmarks_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
-
+import bookmarks from './assets/images/bookmarks_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
+import locationIcon from './assets/images/location_on_30dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
+//weather assets
 import drizzle from './assets/images/icon-drizzle.webp';
 import fog from './assets/images/icon-fog.webp';
 import overcast from './assets/images/icon-overcast.webp';
@@ -28,7 +28,7 @@ import storm from './assets/images/icon-storm.webp';
 import sunny from './assets/images/icon-sunny.webp';
 
 import { LoadingScreen } from './LoadingScreen';
-import { HourlyDiv, CurrentStats, DailyStats } from './Components';
+import { HourlyDiv, CurrentStats, DailyStats, SaveButton, SmallSaveButton } from './Components';
 
 type hourlyData = {
   time: string,
@@ -58,6 +58,12 @@ const imperialUnits =
     precipitation: "inch"
 }
 
+type saveLocation = {
+  coords:{ lat: number; lon: number },
+  name:string,
+  country_code:string
+}
+
 function App() {
   
     const [isError, setIsError] = useState(false);
@@ -66,8 +72,15 @@ function App() {
     const [coords, setCoords] = useState<{ latitude: number; longitude: number }>({ latitude: 52.52, longitude: 13.41 });
     const [cityString, setCityString] = useState("")
     const [weather, setWeather] = useState(defWeather);
-    let currentLocationId = 0;
-
+    const [currentLocation, setCurrentLocation] = useState<{ lat: number; lon: number }>({ lat: 100, lon: 200 })
+    //stores displayed location
+    const [displayedLocation, setDisplayedLocation] = useState<saveLocation>({
+      coords:{ lat: 0, lon: 0 },
+      name:"default",
+      country_code:""
+    });
+    const [isCurrLocDispLoc,setIsCurrLocDispLoc] = useState(true)
+    const [isSaved,setIsSaved] = useState(false)
     const [date, setDate] = useState(new Date());
     const day = days[date.getDay()];
     const dateString = `${day}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
@@ -85,33 +98,33 @@ function App() {
         }
       })
 
-    // const [savedLocations, setSavedLocations] = useState<Array<number>>(
-    //   ()=>{
-    //     try{
-    //       const locations = localStorage.getItem("saved_locations");
-    //       return locations ? JSON.parse(locations) : [];
-    //     }
+    const [savedLocations, setSavedLocations] = useState<Array<saveLocation>>(
+      ()=>{
+        try{
+          const locations = localStorage.getItem("saved_locations");
+          return locations ? JSON.parse(locations) : [];
+        }
 
-    //     catch{
-    //       console.log("error accessing saved locations")
-    //       return [];
-    //     }
-    //   }
-    // )
+        catch{
+          console.log("error accessing saved locations")
+          return [];
+        }
+      }
+    )
 
-    // const [recentSearch, setRecentSearch] = useState<Array<number>>(
-    //   ()=>{
-    //     try{
-    //       const locations = localStorage.getItem("recent_search");
-    //       return locations ? JSON.parse(locations) : [];
-    //     }
+    const [recentSearch, setRecentSearch] = useState<Array<saveLocation>>(
+      ()=>{
+        try{
+          const locations = localStorage.getItem("recent_searches");
+          return locations ? JSON.parse(locations) : [];
+        }
 
-    //     catch{
-    //       console.log("error accessing saved locations")
-    //       return [];
-    //     }
-    //   }
-    // )
+        catch{
+          console.log("error accessing saved locations")
+          return [];
+        }
+      }
+    )
     
     // const [isSaved, setIsSaved] = useState(false);
     const [search, setSearch] = useState("");
@@ -127,7 +140,8 @@ function App() {
 
     const [showUnitsDropdown, setShowUnitsDropdown] = useState(false);
     const [showDaysDropdown, setShowDaysDropdown] = useState(false);
-
+    const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+    const [showSaved, setShowSaved] = useState(false);
     
     
     async function getAllWeather() { // function that gets the forecast
@@ -145,10 +159,18 @@ function App() {
     async function getCity(){
         const res = await axios.get(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}&localityLanguage=en`)
         const location: cityNameResult = res.data;
-        if(res.status!=200){setIsError(true)}
+        if(res.status!=200){setIsError(true); console.log("fetching city name failed!"); return;}
         const country = location.countryName.replace("(the)","")//replaces '(the)' which sometimes pops up in country name
-        
-        currentLocationId
+        //sets current location id which used for saving the location
+          setDisplayedLocation(
+            {
+              coords: {lat: location.latitude, lon: location.longitude},
+              name: location.city,
+              country_code: location.countryCode
+            });
+          console.log("current location changed: "+displayedLocation)
+        setIsCurrLocDispLoc(displayedLocation.coords.lat==currentLocation.lat && displayedLocation.coords.lon==currentLocation.lon)
+        setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
         setCityString(`${location.city}, ${country}`)
     }
 
@@ -190,10 +212,33 @@ function App() {
     }
 
     //saves saved location ids in local storage
-    // function saveLocations(){
-    //   localStorage.setItem("saved_locations",JSON.stringify(savedLocations))
-    // }
+    function handleSaveLocations(loc:saveLocation){
+      const inSaved = savedLocations.some(location=> (location.name===loc.name && location.country_code===loc.country_code));
 
+      if(!inSaved){
+        if(savedLocations.length>=10){alert("maximum saved locations is 10");return;}
+        localStorage.setItem("saved_locations",JSON.stringify([...savedLocations,loc]))
+        setSavedLocations([...savedLocations,loc])
+        const saved_data = localStorage.getItem("saved_locations") || "";
+        const res:Array<saveLocation> = JSON.parse(saved_data);
+        const curr = res.filter((l)=>l.name==loc.name)
+        console.log("saved location "+curr[0].name+" : "+curr[0].country_code)
+      }
+      else{
+        console.log("location already in saved list")
+      }
+    }
+
+    // removes the current location from saved locations
+    function handleRemoveSave(loc:saveLocation){
+      const newSavedLocations = savedLocations.filter((location)=> location.name!=loc.name)
+      setSavedLocations(newSavedLocations)
+      localStorage.setItem("saved_locations",JSON.stringify(newSavedLocations))
+      const saved = localStorage.getItem("saved_locations") || ""
+      console.log("removed current location from saved: "+ JSON.parse(saved))
+    }
+
+    //changes custom units and saves it in the local storage
     function unitChange(parameter:string, unit:string){
       const newUnits = {...wUnits,[parameter]:unit}
       setWUnits(newUnits)
@@ -201,7 +246,7 @@ function App() {
     }
 
 
-
+    //functions for changing units
     function handleSetImperial(){
       setWUnits(imperialUnits);  
       savePrefUnits(imperialUnits)
@@ -216,63 +261,48 @@ function App() {
       unitChange(parameter,unit);
     }
 
+    function handleSearch(){
+      const searchVal = document.getElementById("search") as HTMLInputElement;
+      if(searchVal){
+        setSearch(searchVal.value)
+      };
+    }
+
+    //function to select given search location
     async function handleSearchSelect(index:number){
+      setIsLoading(true)
+      const lat = searchResults[index].latitude;const lon = searchResults[index].longitude; 
+      const name = searchResults[index].name; const c_code = searchResults[index].country_code
+      setCoords(
+        {
+          latitude: lat,
+          longitude: lon 
+        })      
+      setSearch("");
+      setSearchResults([])
+      if(recentSearch.length<5){
+        const newRecent = {coords:{lat:lat,lon:lon},name:name,country_code:c_code}
+        setRecentSearch([...recentSearch, newRecent])
+        localStorage.setItem("recent_searches", JSON.stringify([...recentSearch, newRecent]))
+      }
+      else{
+        let newList = recentSearch.slice(1,5)
+        const newRecent = {coords:{lat:lat,lon:lon},name:name,country_code:c_code}
+        newList.push(newRecent)
+        setRecentSearch(newList)
+        localStorage.setItem("recent_searches", JSON.stringify(newList))
+      }
+    }
+
+    //function to select given saved location
+    async function handleSavedSelect(loc:saveLocation){
       setIsLoading(true)
       setCoords(
         {
-          latitude: searchResults[index].latitude,
-          longitude: searchResults[index].longitude
+          latitude: loc.coords.lat,
+          longitude: loc.coords.lon
         })
-      setSearch("");
-      setSearchResults([])
     }
-
-    useEffect(()=>{
-      setIsImperial(checkIsImperial(wUnits));
-      setIsMetric(checkIsMetric(wUnits));
-    },[wUnits])
-        
-
-    useEffect(()=>{ //changing theme according to day or night at the initial load of the page
-      var doc = document.documentElement;
-      if(hour>6 && hour<17){
-        doc.setAttribute("data-theme","light")
-      }
-      else{doc.setAttribute("data-theme","dark")}
-    },[])
-
-
-
-    useEffect(()=>{
-      console.log("current hour: "+date.getHours())
-    },[date])
-
-    useEffect(()=>{  // updates search results when there is a change in search bar
-      async function getResults(){
-        try{
-          setTimeout(async ()=>{
-            const results = await searchLocation(search)
-            if(results){
-              console.log("search results: "+results[0].name)
-              setSearchResults(results);
-
-            }
-            setSearchIsLoading(false)
-          },300)
-        }
-        catch(err){
-          console.error(err)
-          setSearchIsLoading(false)
-        }
-        
-      }
-
-      if(search.length>1){
-        setSearchResults([])
-        setSearchIsLoading(true)
-        getResults()
-      }
-    },[search])
 
     function fetchLocation(){ // fetches current location of the user defaults to berlin if not fetched
       if(navigator.geolocation){
@@ -282,6 +312,7 @@ function App() {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude
             })
+            setCurrentLocation({lat: position.coords.latitude,lon: position.coords.longitude})
             setIsLocPending(false)
           },
           (error) => {
@@ -309,11 +340,22 @@ function App() {
       }
     }
 
-    useEffect(()=>{        // fetches current location and weather at initial load of page
+    function closeAllDropdowns(){
+      setShowUnitsDropdown(false);
+      setShowDaysDropdown(false);
+      setShowSaved(false);
+    }
+
+    //all useEffect functions below
+
+    // fetches current location and weather at initial load of page
+    useEffect(()=>{
       fetchLocation()
+
     },[])
 
-    useEffect(()=>{ //getting weather and city at initial load and when dependencies change
+    //getting weather and city at initial load and when dependencies change
+    useEffect(()=>{ 
       if(!isLocPending){
         setIsLoading(true)
         getCity();
@@ -321,6 +363,7 @@ function App() {
       } 
     },[coords, hour, wUnits])
 
+    // sets current time after weather is loaded
     useEffect(()=>{
       if(weather!=null){
         setDate(new Date(weather.current.time))
@@ -330,7 +373,8 @@ function App() {
       }
     },[weather])
 
-    useEffect(()=>{               //update hourly forecast if weather or forecast day changes
+    //update hourly forecast if weather or forecast day changes
+    useEffect(()=>{
       if(!isLocPending && weather!=null){
         getHourly(forecastDay);
         setTimeout(()=>{
@@ -340,12 +384,51 @@ function App() {
       }
     },[weather,forecastDay,hour, date])
   
+  //to check current theme
   // console.log(document.documentElement.getAttribute("data-theme"))
-    function closeAllDropdowns(){
-      setShowUnitsDropdown(false);
-      setShowDaysDropdown(false);
-    }
+      //checks whether the selected units or imperial or metric or neither
+    useEffect(()=>{
+      setIsImperial(checkIsImperial(wUnits));
+      setIsMetric(checkIsMetric(wUnits));
+    },[wUnits])
+        
 
+    useEffect(()=>{ //changing theme according to day or night at the initial load of the page
+      var doc = document.documentElement;
+      if(hour>6 && hour<17){
+        doc.setAttribute("data-theme","light")
+      }
+      else{doc.setAttribute("data-theme","dark")}
+    },[])
+
+
+
+    useEffect(()=>{  // updates search results when there is a change in search bar
+      async function getResults(){
+        try{
+          setTimeout(async ()=>{
+            const results = await searchLocation(search)
+            if(results){
+              console.log("search results: "+results[0].name)
+              setSearchResults(results);
+
+            }
+            setSearchIsLoading(false)
+          },300)
+        }
+        catch(err){
+          console.error(err)
+          setSearchIsLoading(false)
+        }
+        
+      }
+
+      if(search.length>1){
+        setSearchResults([])
+        setSearchIsLoading(true)
+        getResults()
+      }
+    },[search])
 
   if(isLoading){ {/* Loading Screen*/}
     return(
@@ -421,40 +504,76 @@ function App() {
           {/* <h1>{coords!=undefined ? `latitude: ${coords?.latitude} longitude: ${coords?.longitude}`: "location is not available"}</h1> */}
 
 
-          <div className='md:flex items-center justify-center md:mb-10'>{/* search bar and button*/}
+          <div className='md:flex items-center align-middle justify-center md:mb-10 md:gap-x-5 gap-x-10'>{/* bookmarks, search bar and button*/}
 
-              <div className='relative'>
+          <div className={isCurrLocDispLoc ? 'flex justify-between md:justify-end w-full md:w-35 md:px-0 md:ms-[-150px]': 
+              'flex justify-between md:justify-between w-full md:w-35 md:px-0 md:ms-[-150px]'}>
+          {/* current location button */}
+            {
+             !isCurrLocDispLoc &&
 
-                <input type='search' value={search} onChange={e=>setSearch(e.target.value)} aria-label='search location'
+              <button className='hover:bg-Neutral-200/20 rounded-lg  p-4 cursor-pointer' 
+                onClick={e=>{e.stopPropagation();fetchLocation()}} title='current location'>
+                <img src={locationIcon}  alt='go to current location'/>
+              </button>
+          }
+
+            {/* bookmarks button and dropdown */}
+            <div className='relative'>
+                <button className=' hover:bg-Neutral-200/20 rounded-lg p-4 cursor-pointer' 
+                  onClick={e=>{e.stopPropagation();setShowSaved(!showSaved)}}>
+                  <img src={bookmarks}/>
+                </button>
+                <SavedDropdown show={showSaved} handleSelect={handleSavedSelect}  savedList={savedLocations} handleRemoveSave={handleRemoveSave}/>
+            </div>
+
+          </div>
+          
+
+
+            {/* search bar and search dropdown */}
+            <form className='md:flex md:gap-x-5' onSubmit={e=>{e.preventDefault();handleSearch();}}>
+
+              <div className='relative mb-5 md:mb-0'>
+                
+                <input type='search' aria-label='search location' onChange={e=>{if(e.target.value.length>=1){setShowSearchDropdown(true)}else{setShowSearchDropdown(false)}}}
                   className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] 
-                    w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
-
-                <img src={searchIcon} className='relative bottom-9.5 left-6' alt='search icon'/>
-
-                <SearchDropdown handleSearchSelect={handleSearchSelect} isLoading={searchIsLoading} show={searchIsLoading || search.length>1} resultList={searchResults} />
-
+                    w-full ps-16 pe-5 focus:outline-white focus:outline-1' placeholder='Search for a place...' id='search' autoComplete='off'/>
+                <img src={searchIcon} className='absolute bottom-4.5 left-6' alt='search icon'/>
+                <SearchDropdown handleSearchSelect={handleSearchSelect} isLoading={searchIsLoading} show={showSearchDropdown} close={()=>setShowSearchDropdown(false)}
+                  showRecent={search.length==0} handleRecentSelect={handleSavedSelect} 
+                  resultList={searchResults} savedList={savedLocations} recentSearches={recentSearch} 
+                   handleRemoveSave={handleRemoveSave} handleSave={handleSaveLocations}/>
               </div>
 
-              <button type='submit' className='bg-Blue-500 font-bri font-semibold text-lg light:bg-Neutral-0 light:text-black light:hover:bg-Neutral-200 rounded-xl px-7 py-3 md:mb-5 mb-10 md:w-fit w-full hover:cursor-pointer hover:bg-Blue-500/70 ease-in'>
+              <button type='submit' className='bg-Blue-500 font-bri font-semibold text-lg light:bg-Neutral-0 light:text-black light:hover:bg-Neutral-200 rounded-xl px-7 py-3 md:mb-0 mb-10 md:w-fit 
+                w-full hover:cursor-pointer hover:bg-Blue-500/70 ease-in'>
                 Search
               </button>
-
+            </form>
           </div>
           <div className='my-grid gap-10 mx-auto lg:gap-3 xl:gap-10'>
 
             <div> {/*div wrapping today div and feels like,preceptitation etc.*/}
 
-              <div className='md:grid md:grid-cols-2 today-bg rounded-xl justify-self-end justify-between md:items-center lg:items-center xl:items-center xl:w-[90%] md:ps-10  lg:ps-5 xl:ps-10 w-fit pt-0.5'> {/* today bg div*/}
+              <div className='md:grid md:grid-cols-2 gap-0 today-bg lg:rounded-xl md:rounded-r-3xl rounded-3xl justify-self-end justify-between md:items-center xl:w-[90%] md:ps-10  lg:ps-5 xl:ps-10 w-full pt-0.5'> {/* today bg div*/}
                   
-                  <div className='md:block hidden'>{/*city div (big screens)*/}
-                    <button className='p-1 hover:bg-Neutral-300/30 relative bottom-10 rounded cursor-pointer' >
-                    <img src={bookmark} className='' alt='save location icon' title='save'/>
-                    </button>
+                    {screen.width > 425 && // bigger save button for bigger screens
+                      <SaveButton handleSaveLocation={()=>handleSaveLocations(displayedLocation)} isSaved={isSaved} handleRemoveSave={()=>handleRemoveSave(displayedLocation)}/>
+                    }
+
+                    {screen.width < 765 && //small save button for smaller screens
+                      <SmallSaveButton handleSaveLocation={()=>handleSaveLocations(displayedLocation)} isSaved={isSaved} handleRemoveSave={()=>handleRemoveSave(displayedLocation)}/>
+                    }
+
+                  <div></div> {/*just to fill the empty grid */}
+
+                  <div className='md:block hidden mt-[-70px] lg:mt-0 xl:mt-[-70px]'>{/*city div (big screens)*/}
                     <p className='text-4xl font-dmsans mb-3'>{cityString}</p>
                     <p className='text-gray-300/60 text-lg'>{dateString}</p>
                   </div>
 
-                  <div className='md:flex hidden align-middle items-center justify-self-start pe-5'>{/* temp weather div (big screens) */}
+                  <div className='md:flex w-full hidden align-middle items-center justify-self-start pe-5 ms-[-30px] mt-[-70px] lg:mt-0 xl:mt-[-90px]'>{/* temp weather div (big screens) */}
                     <img className='h-36' src={WCodetoImg(weather.current.weather_code)} alt={WCodetoText(weather.current.weather_code)} title={WCodetoText(weather.current.weather_code)}/>
                     <p className='xl:text-8xl lg:text-7xl md:text-8xl font-dmsans italic ms-7'>{weather.current.temperature_2m.toPrecision(2)}&deg;</p>
                   </div>
@@ -517,7 +636,7 @@ function App() {
                 
               </span>
 
-              <div className='h-[400px] xl:h-[570px] lg:h-[830px] md:h-[500px] ps-2 overflow-hidden overflow-y-auto forecast-scrollbar'> 
+              <div className='h-[400px] xl:h-[570px] lg:h-[830px] md:h-[500px] ps-2 overflow-hidden overflow-y-auto custom-scroll'> 
                   {forecastDay!=0 &&
                     hourly.map((ihour)=>{
                       return <HourlyDiv key={ihour.time} w_name={WCodetoText(ihour.w_code)} img={WCodetoImg(ihour.w_code)} hour={ihour.time} temperature={ihour.temp}/>

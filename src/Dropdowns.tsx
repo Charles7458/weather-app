@@ -1,11 +1,15 @@
-// import React from "react"
 
 import type { units, locationSearchResult } from "./omAPI"
+import loading from './assets/images/icon-loading.svg'
+
 import checkmark from './assets/images/icon-checkmark.svg';
+import deleteIcon from './assets/images/delete_30dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
+import searchBookmark from './assets/images/bookmark_24dp_D9D9D9_FILL0_wght400_GRAD0_opsz24.svg'
+import searchFilledBookmark from './assets/images/bookmark_24dp_D9D9D9_FILL1_wght400_GRAD0_opsz24.svg'
+
 import { temperatures, wind_speeds, preceptiations } from './omAPI';
 import { useEffect} from "react";
 import { CircleFlag } from "react-circle-flags";
-import loading from './assets/images/icon-loading.svg'
 
 function Partition(){
     return(
@@ -65,34 +69,72 @@ export function UnitsDropdown(fn:{show:boolean,units:units, isImperial:boolean,i
     }
 }
 
-function SearchOptions(fn:{country_code:string,id:number,placeName:string, handleSelect:()=>void}){
+function RecentOptions(fn:{loc:saveLocation, handleSelect:()=>void}){
     return(
-        <div className="flex justify-between items-center py-2 px-5 mt-2 font-semibold rounded-lg hover:bg-Neutral-600 cursor-pointer ease-in"
-            onClick={e=>{e.stopPropagation();fn.handleSelect()}}>
-            <p className="">{fn.placeName}</p>
-            <CircleFlag countryCode={fn.country_code} width="30px"/>
+        <div className="flex justify-between items-center py-2 px-5 my-3 font-semibold rounded-lg hover:bg-Neutral-600/60 cursor-pointer ease-in"
+            onClick={fn.handleSelect}>
+            <span className="flex">
+                <CircleFlag countryCode={fn.loc.country_code.toLowerCase()} width="30px"/>
+                <p className="ms-1 me-8 ">{fn.loc.name}</p>
+            </span>
         </div>
     )
 }
 
-export function SearchDropdown(fn:{show:boolean,isLoading:boolean, resultList:Array<locationSearchResult>,handleSearchSelect:(index:number)=>void}) {
+function SearchOptions(fn:{country_code:string,id:number,placeName:string, handleSelect:()=>void,isSaved:boolean, handleSave:()=>void, handleRemoveSave:()=>void}){
+    return(
+        <div className="flex justify-between items-center py-2 px-5 mt-2 font-semibold rounded-lg hover:bg-Neutral-600 cursor-pointer ease-in"
+            onClick={e=>{e.stopPropagation();fn.handleSelect()}}>
+            <span className="flex">
+                <CircleFlag countryCode={fn.country_code} width="30px"/>
+                <p className="ms-5">{fn.placeName}</p>
+            </span>
+            <button className='p-3 hover:bg-Neutral-300/30 rounded cursor-pointer ms' onClick={e=>{e.stopPropagation();fn.isSaved ? fn.handleRemoveSave()  : fn.handleSave() }}>
+                {
+                    fn.isSaved ? 
+                    <img src={searchFilledBookmark} alt='remove saved location icon' title='Remove from saved'/> :
+                    <img src={searchBookmark} className='' alt='save location icon' title='save'/>
+        
+                }
+            </button>
+        </div>
+    )
+}
 
-    function handleSelect(index:number){
-        fn.handleSearchSelect(index)
+export function SearchDropdown(fn:{show:boolean, close:()=>void, isLoading:boolean, resultList:Array<locationSearchResult>, showRecent:boolean
+    recentSearches:Array<saveLocation>, handleRecentSelect:(loc:saveLocation)=>void,
+    handleSearchSelect:(index:number)=>void, savedList:Array<saveLocation>, handleSave:(loc:saveLocation)=>void, 
+    handleRemoveSave:(loc:saveLocation)=>void}) {
+    function checkSaved(loc:saveLocation){
+        return fn.savedList.some(location => (location.name === loc.name && location.country_code === loc.country_code))
     }
 
-    if(fn.show && fn.isLoading){
+    if(fn.show && fn.showRecent && fn.recentSearches.length>0){
+        return (
+            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit overflow-y-scroll custom-scroll w-full mt-5 md:w-[60vw] lg:w-[40vw] px-2 absolute z-10">
+                <p className="text-Neutral-300 ms-3 my-5">Recent Searches</p>
+                
+                {
+                    fn.recentSearches.map((recent)=>
+                        <RecentOptions handleSelect={()=>{fn.handleRecentSelect(recent);fn.close()}} loc={recent} key={recent.name}/>
+                    )
+                }
+            </div>
+        )
+    }
+    
+    else if(fn.show && fn.isLoading){
         return(
-            <div className="flex rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full md:w-[60vw] lg:w-[40vw] px-5 py-3 absolute z-10">
+            <div className="flex rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full mt-5 md:w-[60vw] lg:w-[40vw] px-5 py-3 absolute z-10">
                 <img src={loading} className="rotation me-5 w-6"/>
                 Search in progress
             </div>
         )
     }
 
-    else if (fn.show && fn.resultList.length==0){
+    else if (fn.show && !fn.showRecent &&fn.resultList.length==0){
         return(
-            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full md:w-[60vw] lg:w-[40vw] px-4 py-4 absolute z-10">
+            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-full mt-5 md:w-[60vw] lg:w-[40vw] px-4 py-4 absolute z-10">
                 No results found
             </div>
         )
@@ -100,10 +142,15 @@ export function SearchDropdown(fn:{show:boolean,isLoading:boolean, resultList:Ar
 
     else if(fn.show && fn.resultList.length>0){
         return(
-            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-70 w-full md:w-[60vw] lg:w-[40vw] px-2 absolute z-10">
+            <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-70 overflow-y-scroll custom-scroll w-full mt-5 md:w-[60vw] lg:w-[40vw] px-2 absolute z-10">
                 {
-                    fn.resultList.map((result,index)=>
-                        <SearchOptions handleSelect={()=>handleSelect(index)} country_code={result.country_code.toLowerCase()} key={result.id} id={result.id} placeName={result.name}/>
+
+                    fn.resultList.map((result,index)=>{
+                        const loc = {coords: {lat:result.latitude,lon:result.longitude}, name:result.name, country_code:result.country_code}
+                        const isSaved = checkSaved(loc)
+                        return <SearchOptions isSaved={isSaved} handleSelect={()=>{fn.handleSearchSelect(index);fn.close()}} country_code={result.country_code.toLowerCase()} key={result.id} id={result.id} placeName={result.name}
+                            handleSave={()=>fn.handleSave(loc)} handleRemoveSave={()=>fn.handleRemoveSave(loc)}/>
+                    }
                     )
                 }
             </div>
@@ -111,6 +158,49 @@ export function SearchDropdown(fn:{show:boolean,isLoading:boolean, resultList:Ar
     }
 }
 
+// bookmarks dropdown
+type saveLocation = {
+  coords:{ lat: number; lon: number },
+  name:string,
+  country_code:string
+}
+
+function SavedOptions(fn:{loc:saveLocation, handleSelect:()=>void, handleRemoveSave:()=>void}){
+    return(
+        <div className="flex justify-between items-center py-2 px-5 my-2 font-semibold rounded-lg hover:bg-Neutral-600/60 cursor-pointer ease-in"
+            onClick={e=>{e.stopPropagation();fn.handleSelect()}}>
+            <CircleFlag countryCode={fn.loc.country_code.toLowerCase()} width="30px"/>
+            <p className="ms-1 me-8 ">{fn.loc.name}</p>
+            <button className="hover:bg-Neutral-300/50 rounded p-2 cursor-pointer" onClick={e=>{e.stopPropagation();fn.handleRemoveSave()}}>
+                <img src={deleteIcon} />
+            </button>
+        </div>
+    )
+}
+
+export function SavedDropdown(fn:{show:boolean, savedList:Array<saveLocation>, handleSelect:(loc:saveLocation)=>void, handleRemoveSave:(loc:saveLocation)=>void}){
+    if(fn.show){
+        if(fn.savedList.length==0){
+            return(
+                <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-48 px-4 py-4 absolute md:right-0 z-10 mt-5">
+                    No Saved Locations
+                </div>
+            )
+        }
+        else{
+            return(
+                <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-60  px-2 absolute md:right-0 z-10 mt-5">
+                    {
+                        fn.savedList.map((save)=>
+                            <SavedOptions handleSelect={()=>fn.handleSelect(save)} loc={save} key={save.name} handleRemoveSave={()=>fn.handleRemoveSave(save)}/>
+                        )
+                    }
+                </div>
+            )
+        }
+        
+    }
+}
 
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const dayKeys = [11,12,13,14,15,16,17]

@@ -67,7 +67,7 @@ export function LoadingScreen(){
 
               <div className='relative'>
 
-                <input type='search' aria-label='search location'
+                <input type='search' aria-label='search location' disabled
                   className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] 
                     w-full ps-16 pe-5 md:me-5 md:m-0 me-10 focus:outline-white focus:outline-1' placeholder='Search for a place...'/>
                 <img src={searchIcon} className='relative bottom-9.5 left-6' alt='search icon'/>
@@ -82,7 +82,8 @@ export function LoadingScreen(){
 
             <div> {/*div wrapping today div and feels like,preceptitation etc.*/}
 
-              <div className='md:grid md:grid-cols-2 bg-Neutral-800 rounded-xl justify-self-end  md:items-center lg:items-center xl:items-center xl:h-[280px] lg:h-[200px] h-[320px] xl:w-[90%] md:ps-10  lg:ps-5 xl:ps-10 w-full pt-0.5'> {/* today bg div*/}
+              <div className='md:grid md:grid-cols-2 bg-Neutral-800 rounded-xl justify-self-end  md:items-center 
+                xl:h-[280px] lg:h-[200px] h-[280px] xl:w-[90%] md:ps-10  lg:ps-5 xl:ps-10 w-full pt-0.5'> {/* today bg div*/}
 
                   <img src={loading} alt='loading icon' className='xl:w-38 w-28 rotation md:ms-[75%] mx-auto md:mt-0 mt-26'></img>
               </div>
@@ -103,7 +104,7 @@ export function LoadingScreen(){
               <div className='mt-10 xl:w-[90%] lg:justify-self-end'>
                 <h4 className='text-Neutral-200 text-xl mb-7'>Daily Forecast</h4>
 
-                <div className='grid md:grid-cols-7 xl:grid-cols-7 lg:grid-cols-5 grid-cols-2 2xs:grid-cols-3 gap-3'>
+                <div className='grid md:grid-cols-5 xl:grid-cols-7 lg:grid-cols-5 grid-cols-2 2xs:grid-cols-3 gap-3'>
                   {
                     Array(7).fill(0).map(()=>
                         <DailyStats  />
