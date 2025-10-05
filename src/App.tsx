@@ -126,7 +126,6 @@ function App() {
       }
     )
     
-    // const [isSaved, setIsSaved] = useState(false);
     const [search, setSearch] = useState("");
     const [searchResults,setSearchResults] = useState<Array<locationSearchResult>>([])
     const [searchIsLoading, setSearchIsLoading] = useState(false);
@@ -175,7 +174,6 @@ function App() {
                 });
               console.log("current location changed: "+displayedLocation)
             setIsCurrLocDispLoc(displayedLocation.coords.lat==currentLocation.lat && displayedLocation.coords.lon==currentLocation.lon)
-            setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
             setCityString(`${location.city}, ${country}`)
         }
     }
@@ -408,7 +406,11 @@ function App() {
       else{doc.setAttribute("data-theme","dark")}
     },[])
 
-
+            
+    useEffect(()=>{
+      setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
+    }
+    ,[savedLocations,coords])
 
     useEffect(()=>{  // updates search results when there is a change in search bar
       async function getResults(){
