@@ -81,13 +81,13 @@ function RecentOptions(fn:{loc:saveLocation, handleSelect:()=>void}){
     )
 }
 
-function SearchOptions(fn:{country_code:string,id:number,placeName:string, handleSelect:()=>void,isSaved:boolean, handleSave:()=>void, handleRemoveSave:()=>void}){
+function SearchOptions(fn:{result:locationSearchResult, handleSelect:()=>void,isSaved:boolean, handleSave:()=>void, handleRemoveSave:()=>void}){
     return(
         <div className="flex justify-between items-center py-2 px-5 mt-2 font-semibold rounded-lg hover:bg-Neutral-600 cursor-pointer ease-in"
             onClick={e=>{e.stopPropagation();fn.handleSelect()}}>
             <span className="flex">
-                <CircleFlag countryCode={fn.country_code} width="30px"/>
-                <p className="ms-5">{fn.placeName}</p>
+                <CircleFlag countryCode={fn.result.country_code.toLowerCase()} width="30px"/>
+                <p className="ms-5">{fn.result.name}, {fn.result.country}</p>
             </span>
             <button className='p-3 hover:bg-Neutral-300/30 rounded cursor-pointer ms' onClick={e=>{e.stopPropagation();fn.isSaved ? fn.handleRemoveSave()  : fn.handleSave() }}>
                 {
@@ -148,7 +148,7 @@ export function SearchDropdown(fn:{show:boolean, close:()=>void, isLoading:boole
                     fn.resultList.map((result,index)=>{
                         const loc = {coords: {lat:result.latitude,lon:result.longitude}, name:result.name, country_code:result.country_code}
                         const isSaved = checkSaved(loc)
-                        return <SearchOptions isSaved={isSaved} handleSelect={()=>{fn.handleSearchSelect(index);fn.close()}} country_code={result.country_code.toLowerCase()} key={result.id} id={result.id} placeName={result.name}
+                        return <SearchOptions isSaved={isSaved} handleSelect={()=>{fn.handleSearchSelect(index);fn.close()}} result={result} key={result.id}
                             handleSave={()=>fn.handleSave(loc)} handleRemoveSave={()=>fn.handleRemoveSave(loc)}/>
                     }
                     )
@@ -170,7 +170,7 @@ function SavedOptions(fn:{loc:saveLocation, handleSelect:()=>void, handleRemoveS
         <div className="flex justify-between items-center py-2 px-5 my-2 font-semibold rounded-lg hover:bg-Neutral-600/60 cursor-pointer ease-in"
             onClick={e=>{e.stopPropagation();fn.handleSelect()}}>
             <CircleFlag countryCode={fn.loc.country_code.toLowerCase()} width="30px"/>
-            <p className="ms-1 me-8 ">{fn.loc.name}</p>
+            <p className="ms-[-30px] me-8 w-5 text-nowrap overflow-ellipsis">{fn.loc.name}</p>
             <button className="hover:bg-Neutral-300/50 rounded p-2 cursor-pointer" onClick={e=>{e.stopPropagation();fn.handleRemoveSave()}}>
                 <img src={deleteIcon} alt="delete"/>
             </button>
@@ -189,7 +189,7 @@ export function SavedDropdown(fn:{show:boolean, savedList:Array<saveLocation>, h
         }
         else{
             return(
-                <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit w-60  px-2 absolute md:right-0 z-10 mt-5">
+                <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-75 overflow-y-scroll custom-scroll w-68  px-2 absolute md:right-0 z-10 mt-5">
                     {
                         fn.savedList.map((save)=>
                             <SavedOptions handleSelect={()=>fn.handleSelect(save)} loc={save} key={save.name} handleRemoveSave={()=>fn.handleRemoveSave(save)}/>

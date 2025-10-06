@@ -174,6 +174,7 @@ function App() {
                 });
               console.log("current location changed: "+displayedLocation)
             setIsCurrLocDispLoc(displayedLocation.coords.lat==currentLocation.lat && displayedLocation.coords.lon==currentLocation.lon)
+            setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
             setCityString(`${location.city}, ${country}`)
         }
     }
@@ -220,16 +221,22 @@ function App() {
       const inSaved = savedLocations.some(location=> (location.name===loc.name && location.country_code===loc.country_code));
 
       if(!inSaved){
-        if(savedLocations.length>=10){alert("maximum saved locations is 10");return;}
-        localStorage.setItem("saved_locations",JSON.stringify([...savedLocations,loc]))
-        setSavedLocations([...savedLocations,loc])
-        const saved_data = localStorage.getItem("saved_locations") || "";
-        const res:Array<saveLocation> = JSON.parse(saved_data);
-        const curr = res.filter((l)=>l.name==loc.name)
-        console.log("saved location "+curr[0].name+" : "+curr[0].country_code)
+        if(savedLocations.length>=10){
+          alert("maximum saved locations is 10")
+        }
+        else{
+          localStorage.setItem("saved_locations",JSON.stringify([...savedLocations,loc]))
+          setSavedLocations([...savedLocations,loc])
+          setIsSaved([...savedLocations,loc].some(savedloc=>savedloc.coords.lat===coords.latitude && savedloc.coords.lon===coords.longitude))
+          const saved_data = localStorage.getItem("saved_locations") || "";
+          const res:Array<saveLocation> = JSON.parse(saved_data);
+          const curr = res.filter((l)=>l.name==loc.name)
+          console.log("saved location "+curr[0].name+" : "+curr[0].country_code)
+        }
       }
       else{
         console.log("location already in saved list")
+        setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
       }
     }
 
@@ -237,6 +244,7 @@ function App() {
     function handleRemoveSave(loc:saveLocation){
       const newSavedLocations = savedLocations.filter((location)=> location.name!=loc.name)
       setSavedLocations(newSavedLocations)
+      setIsSaved(newSavedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
       localStorage.setItem("saved_locations",JSON.stringify(newSavedLocations))
       const saved = localStorage.getItem("saved_locations") || ""
       console.log("removed current location from saved: "+ JSON.parse(saved))
@@ -284,6 +292,7 @@ function App() {
         })      
       setSearch("");
       setSearchResults([])
+      setShowSearchDropdown(false)
       if(recentSearch.length<5){
         const newRecent = {coords:{lat:lat,lon:lon},name:name,country_code:c_code}
         setRecentSearch([...recentSearch, newRecent])
@@ -356,7 +365,6 @@ function App() {
     // fetches current location and weather at initial load of page
     useEffect(()=>{
       fetchLocation()
-
     },[])
 
     //getting weather and city at initial load and when dependencies change
@@ -406,11 +414,6 @@ function App() {
       else{doc.setAttribute("data-theme","dark")}
     },[])
 
-            
-    useEffect(()=>{
-      setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
-    }
-    ,[savedLocations,coords])
 
     useEffect(()=>{  // updates search results when there is a change in search bar
       async function getResults(){
@@ -547,7 +550,11 @@ function App() {
 
               <div className='relative mb-5 md:mb-0'>
                 
-                <input type='search' aria-label='search location' onChange={e=>{if(e.target.value.length>=1){setShowSearchDropdown(true)}else{setShowSearchDropdown(false)}}}
+                <input type='search' aria-label='search location' onChange={e=>{
+                  if(e.target.value.length>=1){setShowSearchDropdown(true)}
+                  else{setShowSearchDropdown(false)}
+                  setSearchResults([])}}
+
                   className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] 
                     w-full ps-16 pe-5 focus:outline-white focus:outline-1' placeholder='Search for a place...' id='search' autoComplete='off'/>
                 <img src={searchIcon} className='absolute bottom-4.5 left-6' alt='search icon'/>
