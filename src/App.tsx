@@ -174,7 +174,7 @@ function App() {
                 });
               console.log("current location changed: "+displayedLocation)
             setIsCurrLocDispLoc(displayedLocation.coords.lat==currentLocation.lat && displayedLocation.coords.lon==currentLocation.lon)
-            setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
+            setIsSaved(savedLocations.some(loc=>loc.name==location.city))
             setCityString(`${location.city}, ${country}`)
         }
     }
@@ -552,8 +552,7 @@ function App() {
                 
                 <input type='search' aria-label='search location' onChange={e=>{
                   if(e.target.value.length>=1){setShowSearchDropdown(true)}
-                  else{setShowSearchDropdown(false)}
-                  setSearchResults([])}}
+                  else{setShowSearchDropdown(false);setSearchResults([]);}}}
 
                   className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] 
                     w-full ps-16 pe-5 focus:outline-white focus:outline-1' placeholder='Search for a place...' id='search' autoComplete='off'/>
