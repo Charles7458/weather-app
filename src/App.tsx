@@ -174,7 +174,7 @@ function App() {
                 });
               console.log("current location changed: "+displayedLocation)
             setIsCurrLocDispLoc(displayedLocation.coords.lat==currentLocation.lat && displayedLocation.coords.lon==currentLocation.lon)
-            setIsSaved(savedLocations.some(loc=>loc.coords.lat===coords.latitude && loc.coords.lon===coords.longitude))
+            setIsSaved(savedLocations.some(loc=>loc.name==location.city || (loc.coords.lat === location.latitude && loc.coords.lon === location.longitude) ))
             setCityString(`${location.city}, ${country}`)
         }
     }
@@ -274,6 +274,7 @@ function App() {
     }
 
     function handleSearch(){
+      console.log("handling search")
       const searchVal = document.getElementById("search") as HTMLInputElement;
       if(searchVal){
         setSearch(searchVal.value)
@@ -292,7 +293,6 @@ function App() {
         })      
       setSearch("");
       setSearchResults([])
-      setShowSearchDropdown(false)
       if(recentSearch.length<5){
         const newRecent = {coords:{lat:lat,lon:lon},name:name,country_code:c_code}
         setRecentSearch([...recentSearch, newRecent])
@@ -310,6 +310,7 @@ function App() {
     //function to select given saved location
     async function handleSavedSelect(loc:saveLocation){
       setIsLoading(true)
+      
       setCoords(
         {
           latitude: loc.coords.lat,
@@ -358,6 +359,7 @@ function App() {
       setShowUnitsDropdown(false);
       setShowDaysDropdown(false);
       setShowSaved(false);
+      setShowSearchDropdown(false);
     }
 
     //all useEffect functions below
@@ -437,12 +439,16 @@ function App() {
         
       }
 
-      if(search.length>1){
+      if(search.length>=1){
         setSearchResults([])
         setSearchIsLoading(true)
         getResults()
       }
     },[search])
+
+    useEffect(()=>{ // close all dropdowns when loading weather
+      closeAllDropdowns()
+    },[isLoading])
 
   if(isLoading){ {/* Loading Screen*/}
     return(
@@ -552,14 +558,13 @@ function App() {
                 
                 <input type='search' aria-label='search location' onChange={e=>{
                   if(e.target.value.length>=1){setShowSearchDropdown(true)}
-                  else{setShowSearchDropdown(false)}
-                  setSearchResults([])}}
+                  else{setShowSearchDropdown(false);setSearchResults([]);}}}
 
                   className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] 
                     w-full ps-16 pe-5 focus:outline-white focus:outline-1' placeholder='Search for a place...' id='search' autoComplete='off'/>
                 <img src={searchIcon} className='absolute bottom-4.5 left-6' alt='search icon'/>
                 <SearchDropdown handleSearchSelect={handleSearchSelect} isLoading={searchIsLoading} show={showSearchDropdown} close={()=>setShowSearchDropdown(false)}
-                  showRecent={search.length==0} handleRecentSelect={handleSavedSelect} 
+                  showRecent={search.length==0 && showSearchDropdown} handleRecentSelect={handleSavedSelect} 
                   resultList={searchResults} savedList={savedLocations} recentSearches={recentSearch} 
                    handleRemoveSave={handleRemoveSave} handleSave={handleSaveLocations}/>
               </div>
