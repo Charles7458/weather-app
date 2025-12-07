@@ -310,6 +310,7 @@ function App() {
     //function to select given saved location
     async function handleSavedSelect(loc:saveLocation){
       setIsLoading(true)
+      setShowSaved(false)
       setCoords(
         {
           latitude: loc.coords.lat,
