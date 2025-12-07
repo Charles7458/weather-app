@@ -316,6 +316,7 @@ function App() {
           latitude: loc.coords.lat,
           longitude: loc.coords.lon
         })
+      closeAllDropdowns()
     }
 
     function fetchLocation(){ // fetches current location of the user defaults to berlin if not fetched
@@ -360,6 +361,7 @@ function App() {
       setShowDaysDropdown(false);
       setShowSaved(false);
       setShowSearchDropdown(false);
+      console.log("search dropdown: false(close all)")
     }
 
     //all useEffect functions below
@@ -446,9 +448,6 @@ function App() {
       }
     },[search])
 
-    useEffect(()=>{ // close all dropdowns when loading weather
-      closeAllDropdowns()
-    },[isLoading])
 
   if(isLoading){ {/* Loading Screen*/}
     return(
@@ -523,10 +522,12 @@ function App() {
           <h1 className='text-6xl  font-bri mx-[6vw] md:mx-0 my-16 text-center leading-18'>How's the sky looking today?</h1>
 
 
-          <div className='md:flex items-center align-middle justify-center md:mb-10 md:gap-x-5 gap-x-10'>{/* bookmarks, search bar and button*/}
+          <div className='md:flex items-center align-middle justify-center md:mb-10 md:gap-x-5 gap-x-10'
+                onClick={e=>e.stopPropagation()}>{/* bookmarks, search bar and button*/}
 
           <div className={isCurrLocDispLoc ? 'flex justify-between md:justify-end w-full md:w-35 md:px-0 md:ms-[-150px]': 
-              'flex justify-between md:justify-between w-full md:w-35 md:px-0 md:ms-[-150px]'}>
+              'flex justify-between md:justify-between w-full md:w-35 md:px-0 md:ms-[-150px]'}
+              >
 
             {/* bookmarks button and dropdown */}
             <div className='relative'>
@@ -552,18 +553,18 @@ function App() {
 
 
             {/* search bar and search dropdown */}
-            <form className='md:flex md:gap-x-5' onSubmit={e=>{e.preventDefault();handleSearch();}}>
+            <form className='md:flex md:gap-x-5' onSubmit={e=>{e.preventDefault();e.stopPropagation();handleSearch();}}>
 
               <div className='relative mb-5 md:mb-0'>
                 
                 <input type='search' aria-label='search location' onChange={e=>{
-                  if(e.target.value.length>=1){setShowSearchDropdown(true)}
-                  else{setShowSearchDropdown(false);setSearchResults([]);}}}
+                  if(e.target.value.length>=1){setShowSearchDropdown(true);console.log("search dropdown: true")}
+                  else{setShowSearchDropdown(false);console.log("search dropdown: false(input)");setSearchResults([]);}}}
 
                   className='bg-Neutral-700 placeholder:font-semibold placeholder:text-Neutral-300 rounded-xl py-4 lg:w-[40vw] md:w-[60vw] 
                     w-full ps-16 pe-5 focus:outline-white focus:outline-1' placeholder='Search for a place...' id='search' autoComplete='off'/>
                 <img src={searchIcon} className='absolute bottom-4.5 left-6' alt='search icon'/>
-                <SearchDropdown handleSearchSelect={handleSearchSelect} isLoading={searchIsLoading} show={showSearchDropdown} close={()=>setShowSearchDropdown(false)}
+                <SearchDropdown handleSearchSelect={handleSearchSelect} isLoading={searchIsLoading} show={showSearchDropdown} close={()=>{closeAllDropdowns();console.log("search dropdown: false(dd close)")}}
                   showRecent={search.length==0 && showSearchDropdown} handleRecentSelect={handleSavedSelect} 
                   resultList={searchResults} savedList={savedLocations} recentSearches={recentSearch} 
                    handleRemoveSave={handleRemoveSave} handleSave={handleSaveLocations}/>
