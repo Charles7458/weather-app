@@ -174,7 +174,7 @@ function App() {
                 });
               console.log("current location changed: "+displayedLocation)
             setIsCurrLocDispLoc(displayedLocation.coords.lat==currentLocation.lat && displayedLocation.coords.lon==currentLocation.lon)
-            setIsSaved(savedLocations.some(loc=>loc.name==location.city || (loc.coords.lat === location.latitude && loc.coords.lon === location.longitude) ))
+            setIsSaved(savedLocations.some(loc=>loc.name==location.city))
             setCityString(`${location.city}, ${country}`)
         }
     }
