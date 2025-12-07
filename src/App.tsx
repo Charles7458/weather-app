@@ -292,7 +292,6 @@ function App() {
         })      
       setSearch("");
       setSearchResults([])
-      setShowSearchDropdown(false)
       if(recentSearch.length<5){
         const newRecent = {coords:{lat:lat,lon:lon},name:name,country_code:c_code}
         setRecentSearch([...recentSearch, newRecent])
@@ -310,7 +309,7 @@ function App() {
     //function to select given saved location
     async function handleSavedSelect(loc:saveLocation){
       setIsLoading(true)
-      setShowSaved(false)
+      
       setCoords(
         {
           latitude: loc.coords.lat,
@@ -359,6 +358,7 @@ function App() {
       setShowUnitsDropdown(false);
       setShowDaysDropdown(false);
       setShowSaved(false);
+      setShowSearchDropdown(false);
     }
 
     //all useEffect functions below
@@ -444,6 +444,10 @@ function App() {
         getResults()
       }
     },[search])
+
+    useEffect(()=>{ // close all dropdowns when loading weather
+      closeAllDropdowns()
+    },[isLoading])
 
   if(isLoading){ {/* Loading Screen*/}
     return(
@@ -559,7 +563,7 @@ function App() {
                     w-full ps-16 pe-5 focus:outline-white focus:outline-1' placeholder='Search for a place...' id='search' autoComplete='off'/>
                 <img src={searchIcon} className='absolute bottom-4.5 left-6' alt='search icon'/>
                 <SearchDropdown handleSearchSelect={handleSearchSelect} isLoading={searchIsLoading} show={showSearchDropdown} close={()=>setShowSearchDropdown(false)}
-                  showRecent={search.length==0} handleRecentSelect={handleSavedSelect} 
+                  showRecent={search.length==0 && showSearchDropdown} handleRecentSelect={handleSavedSelect} 
                   resultList={searchResults} savedList={savedLocations} recentSearches={recentSearch} 
                    handleRemoveSave={handleRemoveSave} handleSave={handleSaveLocations}/>
               </div>
