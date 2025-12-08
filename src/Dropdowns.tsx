@@ -109,7 +109,7 @@ export function SearchDropdown(fn:{show:boolean, close:()=>void, isLoading:boole
         return fn.savedList.some(location => (location.name === loc.name && location.country_code === loc.country_code))
     }
 
-    if(fn.show && fn.showRecent && fn.recentSearches.length>0){
+    if(fn.showRecent && fn.recentSearches.length>0){
         return (
             <div className="rounded-lg bg-Neutral-700 border border-Neutral-600 shadow-2xl h-fit overflow-y-scroll custom-scroll w-full mt-5 md:w-[60vw] lg:w-[40vw] px-2 absolute z-10">
                 <p className="text-Neutral-300 ms-3 my-5">Recent Searches</p>
